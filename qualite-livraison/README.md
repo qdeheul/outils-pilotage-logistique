@@ -40,9 +40,9 @@ Extract_récep_20 (1 / semaine)      ──────►    Récep Décanting 
 - Évolution hebdomadaire / mensuelle / journalière ;
 - Filtres par expéditeur, semaine, mois ; interface FR / EN ; tutoriel intégré.
 
-## Captures
+## Dashboard
 
-_(à ajouter : `captures/qualite.png`)_
+Lien dans le fichier principal
 
 ## Fichiers
 
