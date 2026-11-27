@@ -2,6 +2,18 @@
 
 Trois tableaux de bord que j'ai conçus pendant mon expérience d'assistant responsable logistique dans un **centre de distribution** (réception des camions, respect des créneaux transporteurs, qualité des livraisons).
 
+## 🔗 Voir les démos en ligne
+
+| Tableau de bord | Lien |
+|---|---|
+| 🚚 Suivi traction (retards et créneaux transporteurs) | [Ouvrir le tableau de bord](https://script.google.com/macros/s/AKfycbwWaSTw3LNZzOvDUDhh-F9x_wPLbpw0CD8YANL_i9QVTSSGHXndpdU3yWJTrRVYw44BLQ/exec?page=site2) |
+| 📦 Réception – reste à quai | [Ouvrir le tableau de bord](https://script.google.com/macros/s/AKfycbwWaSTw3LNZzOvDUDhh-F9x_wPLbpw0CD8YANL_i9QVTSSGHXndpdU3yWJTrRVYw44BLQ/exec) |
+| ✅ Qualité de livraison (rejets, colis bombés) | [Ouvrir le tableau de bord](https://script.google.com/macros/s/AKfycby4ZFgiPUAXp7iTMfh6rgODhYJtf-Faw81htGclOlmvIqkexvCXbt35-dBM7wQeLfft_w/exec) |
+
+**Données de démo (Google Drive, lecture seule)** : [dossier Suivi traction & Réception](https://drive.google.com/drive/folders/1EtFNCPS9f12ls1v368M8JbaD9aaDVZqW?usp=sharing) · [dossier Qualité de livraison](https://drive.google.com/drive/folders/1n-YiLra165YpiHjt9I5bF0AG0yTdtHVo?usp=sharing)
+
+_Applications web Google Apps Script : le premier chargement peut prendre quelques secondes. Sur Qualité de livraison, choisissez d'abord la langue (FR / EN)._
+
 > ⚠️ **Toutes les données de ce dépôt sont fictives.** Elles ont été générées par un script pour reproduire la structure et les ordres de grandeur des vrais fichiers, sans aucune donnée réelle. Les noms de sites, d'expéditeurs (ENTREPÔT 1 à 7) et de transporteurs (TRANSPORTEUR 1 à 11) sont inventés. Les règles métier et les paramètres de calcul ont été adaptés.
 
 ## Les 3 projets
