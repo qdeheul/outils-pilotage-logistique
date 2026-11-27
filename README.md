@@ -21,7 +21,7 @@ _Applications web Google Apps Script : le premier chargement peut prendre quelqu
 | Projet | Problème métier | Ce que fait l'outil |
 |---|---|---|
 | [Suivi traction](./suivi-traction) | Les camions arrivent-ils dans leur créneau, avec le bon contenu, à l'heure ? | Croise les réceptions avec les extractions du logiciel de prise de RDV, contrôle chaque camion et classe les retards par transporteur |
-| [Réception – reste à quai](./reception-reste-a-quai) | Quels colis attendent encore d'être rangés, et lesquels vont dépasser le délai promis ? | Liste les camions avec des colis restants, calcule l'heure limite de promesse et priorise les travées |
+| [Réception – reste à quai](./reception-reste-a-quai) | Quels colis attendent encore d'être réceptionnés, et lesquels ont dépasser le délai promis ? | Liste les camions avec des colis restants, calcule l'heure limite de promesse et priorise les travées |
 | [Qualité de livraison](./qualite-livraison) | Quels expéditeurs envoient des colis non conformes (rejets, colis bombés) et combien ça coûte ? | Consolide 4 extractions, retrouve l'expéditeur de chaque colis et calcule taux d'anomalies, coûts et top articles |
 
 ## Ce que ces projets montrent
@@ -54,4 +54,4 @@ J'ai défini le besoin, les règles métier, la structure des données et les fo
 Google Sheets · Google Apps Script · HTML / Tailwind CSS · Chart.js · Python (génération des données fictives)
 
 ---
-Quentin Deheul – en recherche d'alternance **Data Analyst** à partir de septembre 2027 (partout en France).
+Quentin Deheul – en recherche d'alternance **Data Analyst** à partir de septembre 2027 (partout en France et dans le monde).
