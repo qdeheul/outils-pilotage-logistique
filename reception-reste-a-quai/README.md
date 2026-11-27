@@ -37,7 +37,7 @@ Application web : liste des camions, KPI, ordre de priorité des travées
 
 ## Dashboard
 
-Lien dans le fichier principal
+Lien dans le README principal
 
 ## Fichiers
 
