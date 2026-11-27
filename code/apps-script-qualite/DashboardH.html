@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qualité de livraison – Démo</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --navy: #1E293B;
+      --navy-light: #334155;
+      --blue-accent: #3B5BDB;
+      --green: #16A34A;
+      --green-bg: #DCFCE7;
+      --purple: #6366F1;
+      --red: #DC2626;
+      --amber: #D97706;
+      --bg: #F3F5F9;
+      --card: #FFFFFF;
+      --text: #1E293B;
+      --muted: #64748B;
+      --border: #E2E8F0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 20px; overflow-x: hidden; }
+
+    /* Modal de Langue */
+    #lang-modal {
+      position: fixed; inset: 0; background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; z-index: 1000;
+    }
+    .lang-card {
+      background: #FFF; border-radius: 16px; padding: 40px; width: 450px; max-width: 90%;
+      text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    .lang-card h2 { color: var(--navy); font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .lang-card p { color: var(--muted); font-size: 15px; margin-bottom: 30px; }
+    .lang-options { display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; }
+    
+    .lang-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; cursor: pointer; transition: transform 0.2s; }
+    .lang-btn:hover { transform: scale(1.08); }
+    .lang-btn span.iso { font-size: 48px; font-weight: 800; color: #475569; transition: color 0.2s; }
+    .lang-btn span.label { font-size: 13px; font-weight: 700; color: #94A3B8; transition: color 0.2s; }
+    .lang-btn:hover span.iso, .lang-btn:hover span.label { color: var(--navy); }
+
+    /* Modal Tutoriel */
+    #tut-modal { position: fixed; inset: 0; background: rgba(30,41,59,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+    .tut-container { background: var(--bg); border-radius: 12px; width: 100%; max-width: 1300px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+    .tut-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; background: #FFF; border-bottom: 1px solid var(--border); border-radius: 12px 12px 0 0; }
+    .tut-header h2 { font-size: 18px; color: var(--navy); display: flex; align-items: center; gap: 10px; font-weight: 800; }
+    .btn-close-tut { background: #FEE2E2; color: #DC2626; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .btn-close-tut:hover { background: #FCA5A5; }
+    .tut-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+    .tut-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .tut-card { background: #FFF; padding: 16px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+    .tut-card h4 { font-size: 12.5px; color: var(--navy); margin-bottom: 8px; font-weight: 800; }
+    .tut-card p { font-size: 12.5px; color: var(--muted); line-height: 1.45; font-weight: 500; }
+    .tut-bottom-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+    /* Header */
+    .topbar { background: linear-gradient(90deg, var(--navy) 0%, var(--navy-light) 100%); color: #FFF; padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; align-items: center; }
+    .brand img { height: 26px; width: auto; filter: brightness(0) invert(1); display: block; }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; }
+    .btn-refresh { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #FFF; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12.5px; font-weight: 600; transition: background 0.2s; }
+    .btn-refresh:hover { background: rgba(255,255,255,0.25); }
+    
+    /* Conteneur fluide adaptatif */
+    .container { width: 97%; max-width: 2200px; margin: 14px auto; transition: filter 0.3s; }
+
+    /* Filtres */
+    .filter-bar { background: var(--card); border-radius: 8px; padding: 9px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; border: 1px solid var(--border); margin-bottom: 14px; }
+    .filter-group { display: flex; align-items: center; gap: 8px; }
+    .filter-group label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+    .filter-group select { padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; background: #F8FAFC; min-width: 150px; cursor: pointer; }
+    .btn-reset { margin-left: auto; background: #EFF6FF; color: var(--blue-accent); border: 1px solid #BFDBFE; padding: 5px 12px; border-radius: 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; }
+
+    /* Grille principale fluide */
+    /* Grille principale sobre & uniforme */
+    .top-grid { display: grid; grid-template-columns: 4fr 5fr; gap: 12px; margin-bottom: 14px; align-items: stretch; }
+    .kpi-main-group { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: 1fr 1fr; gap: 10px; }
+    .kpi-card { background: var(--card); border-radius: 8px; padding: clamp(10px, 1vw, 18px) clamp(12px, 1.2vw, 20px); border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+    .kpi-title { font-size: clamp(10px, 0.75vw, 12.5px); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
+    .kpi-main { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+    .kpi-val { 
+      font-size: clamp(20px, 1.8vw, 32px); 
+      font-weight: 800; 
+      color: #1D4ED8; /* Bleu cobalt vif pour le chiffre principal */
+      line-height: 1.1; 
+    }
+    .kpi-rate { 
+      font-size: clamp(10.5px, 0.8vw, 13px); 
+      font-weight: 700; 
+      padding: 3px 9px; 
+      border-radius: 5px; 
+      background: var(--navy); /* Fond plein */
+      color: #FFFFFF;          /* Texte blanc net */
+      white-space: nowrap; 
+    }
+    .kpi-sub-text { font-size: clamp(10px, 0.75vw, 12px); color: var(--muted); margin-top: 4px; font-weight: 600; }
+
+    /* Bloc Droite : Causes + Impacts */
+    .right-group { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: auto 1fr; gap: 10px; min-width: 0; }
+    .causes-card { background: var(--card); border-radius: 8px; padding: clamp(10px, 1vw, 18px) clamp(14px, 1.2vw, 22px); border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; grid-column: span 3; }
+    .causes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .causes-header h2 { font-size: clamp(10.5px, 0.8vw, 13px); font-weight: 800; text-transform: uppercase; color: var(--navy); }
+    .causes-badge { font-size: 10px; font-weight: 700; color: #1D4ED8; background: #EEF2FF; padding: 2px 8px; border-radius: 4px; }
+    .cause-row { display: grid; grid-template-columns: 125px 1fr 48px; align-items: center; gap: 10px; margin-bottom: 5px; }
+    .cause-row:last-child { margin-bottom: 0; }
+    .cause-label { font-size: clamp(11px, 0.8vw, 12.5px); font-weight: 700; white-space: nowrap; color: var(--text); }
+    .bar-track { background: #F1F5F9; height: 9px; border-radius: 5px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 5px; transition: width 0.4s; }
+    .cause-count { font-size: clamp(11px, 0.8vw, 13px); font-weight: 800; text-align: right; color: var(--navy); }
+
+    /* Bottom Grid */
+    .bottom-grid { display: grid; grid-template-columns: 1fr 1.85fr; gap: 12px; }
+    .panel { background: var(--card); border-radius: 8px; padding: clamp(12px, 1.1vw, 20px); border: 1px solid var(--border); min-width: 0; display: flex; flex-direction: column; }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .panel-header h3 { font-size: clamp(11.5px, 0.85vw, 14px); font-weight: 800; text-transform: uppercase; }
+    
+    table.top-table { width: 100%; border-collapse: collapse; }
+    table.top-table th { text-align: left; font-size: 10px; font-weight: 700; color: var(--muted); padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    table.top-table td { padding: clamp(7px, 0.7vw, 12px) 4px; border-bottom: 1px solid #F1F5F9; font-size: clamp(11.5px, 0.85vw, 13.5px); font-weight: 600; }
+    table.top-table th:nth-child(-n+3), table.top-table td:nth-child(-n+3) { white-space: nowrap; padding-right: 14px; }
+    .edc-pill { background: #F1F5F9; font-size: 10px; padding: 2px 5px; border-radius: 4px; margin-right: 3px; color: var(--muted); display: inline-block; margin-bottom: 2px; }
+
+    .toggle-group { display: inline-flex; background: #F1F5F9; padding: 2px; border-radius: 6px; border: 1px solid var(--border); }
+    .toggle-btn { border: none; background: transparent; padding: 4px 10px; font-size: 11px; font-weight: 700; color: var(--muted); border-radius: 5px; cursor: pointer; }
+    .toggle-btn.active { background: var(--navy); color: #FFF; }
+    .chart-box { position: relative; height: clamp(230px, 28vh, 380px); width: 100%; flex-grow: 1; }
+
+    #loader { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 999; font-weight: 700; color: var(--navy); }
+    .spinner { width: 38px; height: 38px; border: 4px solid #CBD5E1; border-top-color: var(--navy); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 10px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Bascule uniquement sur tablettes / mobiles (< 950px) */
+    @media (max-width: 950px) {
+      .top-grid { grid-template-columns: 1fr; }
+      .bottom-grid { grid-template-columns: 1fr; }
+      .tut-grid { grid-template-columns: repeat(2, 1fr); }
+      .tut-bottom-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .kpi-main-group { grid-template-columns: 1fr; }
+      .right-group { grid-template-columns: 1fr; }
+      .causes-card { grid-column: 1; }
+      .tut-grid { grid-template-columns: 1fr; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+      .btn-reset { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Modal de Langue Initiale -->
+<div id="lang-modal">
+  <div class="lang-card">
+    <h2>Bienvenue / Welcome</h2>
+    <p>Choisissez votre langue / Choose your language</p>
+    <div class="lang-options">
+      <button class="lang-btn" onclick="setLanguage('FR')"><span class="iso">FR</span><span class="label">Français</span></button>
+      <button class="lang-btn" onclick="setLanguage('EN')"><span class="iso">EN</span><span class="label">English</span></button>
+    </div>
+    <button class="btn-refresh" style="background:#F1F5F9; color:var(--navy); border:1px solid var(--border);" onclick="openTut()">💡 Tutoriel / Tutorial</button>
+  </div>
+</div>
+
+<!-- Modal Tutoriel -->
+<div id="tut-modal">
+  <div class="tut-container">
+    <div class="tut-header">
+      <h2 id="tut-title">💡 Tutoriel : Explication des indicateurs</h2>
+      <button class="btn-close-tut" id="tut-close" onclick="closeTut()">Fermer</button>
+    </div>
+    <div class="tut-body">
+      <div class="tut-grid">
+        <div class="tut-card"><h4 id="tut-h1">COLIS RÉCEPTIONNÉS</h4><p id="tut-p1">Nombre total de colis réceptionnés sur la période et l'expéditeur sélectionnés.</p></div>
+        <div class="tut-card"><h4 id="tut-h2">REJETS EXPÉDITEUR</h4><p id="tut-p2">Nombre de colis rejetés pour des anomalies pour lesquelles l'expéditeur peut agir (motifs SHU missing et No Storage Request uniquement). Le pourcentage indique leur part par rapport aux colis réceptionnés.</p></div>
+        <div class="tut-card"><h4 id="tut-h3">COLIS BOMBÉS</h4><p id="tut-p3">Nombre de colis ayant subi l'action de décanting/bombage. Le pourcentage indique la part de ces colis par rapport au total réceptionné.</p></div>
+        <div class="tut-card"><h4 id="tut-h4">CUMUL ANOMALIES</h4><p id="tut-p4">Addition des Colis Bombés et des Rejets expéditeur. Attention : En vue "Tous les expéditeurs", ce cumul additionne toutes les causes de rejets confondues. Si un expéditeur spécifique est filtré, il n'additionne que les rejets reliés à cet expéditeur.</p></div>
+        <div class="tut-card"><h4 id="tut-h8">PROD PERDUE (IN)</h4><p id="tut-p8">Estimation de la production perdue en entrée. Calculée sur une base de 2,5 minutes perdues par colis bombé, avec une cadence théorique de 110 colis par heure.</p></div>
+        <div class="tut-card"><h4 id="tut-h9">PLACES STOCKAGE AUTO PERDUES</h4><p id="tut-p9">Emplacements supplémentaires occupés dans la zone mécanisée. Un colis bombé occupe 1.75 place au lieu de 1, soit une perte de 0.75 place par colis.</p></div>
+        <div class="tut-card"><h4 id="tut-h10">COÛT COLIS BOMBÉS</h4><p id="tut-p10">Coût financier estimé du décanting : (Colis bombés × 2 cartons × 0,85 €) + (Colis bombés × 2,5 min × 15 €/h).</p></div>
+      </div>
+      <div class="tut-bottom-grid">
+        <div class="tut-card"><h4 id="tut-h5">RÉPARTITION DES CAUSES</h4><p id="tut-p5">Détail du volume de rejets selon 4 catégories (SHU missing, No Storage Request, DC Fault, et Autres). Les causes "Autres" ne s'affichent que dans la vue globale de l'entrepôt.</p></div>
+        <div class="tut-card"><h4 id="tut-h6">TOP 5 ITEMS LES PLUS BOMBÉS</h4><p id="tut-p6">Classement des 5 références d'articles générant le plus de colis bombés. La jauge "Part" indique le poids de cet article dans le total.</p></div>
+        <div class="tut-card"><h4 id="tut-h7">ÉVOLUTION TEMPORELLE</h4><p id="tut-p7">Suivi dynamique de la volumétrie. L'axe de droite représente les volumes de Réception, et les courbes (axe de gauche) montrent l'évolution des anomalies et des rejets.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="loader"><div class="spinner"></div><div id="txt-loader">Chargement...</div></div>
+
+<header class="topbar">
+  <div class="brand">
+    <span style="font-weight:800; letter-spacing:0.5px;">QUALITÉ DE LIVRAISON</span>
+    <span style="margin-left:10px; font-size:11px; font-weight:700; background:rgba(255,255,255,0.15); padding:3px 8px; border-radius:5px;">Démo – données fictives</span>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn-refresh" style="background: transparent;" onclick="openTut()">💡 <span id="lbl-tut-btn">Tutoriel</span></button>
+    <button class="btn-refresh" style="background: transparent;" onclick="toggleLang()">🌐 FR / EN</button>
+    <button class="btn-refresh" onclick="chargerDonnees(true)">🔄 <span id="lbl-refresh">Actualiser</span></button>
+  </div>
+</header>
+
+<div class="container" id="main-content" style="filter: blur(4px); pointer-events: none;">
+  <div class="filter-bar">
+    <div class="filter-group"><label id="lbl-edc" for="sel-cac">EXPÉDITEUR :</label><select id="sel-cac" onchange="mettreAJourDashboard()"></select></div>
+    <div class="filter-group"><label id="lbl-sem" for="sel-sem">SEMAINES :</label><select id="sel-sem" onchange="mettreAJourDashboard()"></select></div>
+    <div class="filter-group"><label id="lbl-mois" for="sel-mois">MOIS :</label><select id="sel-mois" onchange="mettreAJourDashboard()"></select></div>
+    <button class="btn-reset" id="btn-reset" onclick="reinitialiserFiltres()">Réinitialiser les filtres</button>
+  </div>
+
+  <div class="top-grid">
+    <!-- BLOC GAUCHE : LES 4 KPI DE BASE -->
+    <div class="kpi-main-group">
+      <div class="kpi-card"><div class="kpi-title" id="t-recep">COLIS RÉCEPTIONNÉS</div><div class="kpi-main"><span class="kpi-val" id="kpi-recep">0</span></div></div>
+      <div class="kpi-card"><div class="kpi-title" id="t-rejets">REJETS EXPÉDITEUR</div><div class="kpi-main"><span class="kpi-val" id="kpi-rejet">0</span><span class="kpi-rate" id="kpi-rejet-pct">0.00 %</span></div><div class="kpi-sub-text" id="kpi-rejet-detail">SHU missing : 0 | No Storage : 0</div></div>
+      <div class="kpi-card"><div class="kpi-title" id="t-bombes">COLIS BOMBÉS</div><div class="kpi-main"><span class="kpi-val" id="kpi-dec">0</span><span class="kpi-rate" id="kpi-dec-pct">0.00 %</span></div></div>
+      <div class="kpi-card"><div class="kpi-title" id="t-cumul">CUMUL ANOMALIES</div><div class="kpi-main"><span class="kpi-val" id="kpi-cumul">0</span><span class="kpi-rate" id="kpi-cumul-pct">0.00 %</span></div></div>
+    </div>
+
+    <!-- BLOC DROITE : CAUSES + IMPACTS -->
+    <div class="right-group">
+      <div class="causes-card">
+        <div class="causes-header"><h2 id="t-causes">RÉPARTITION DES CAUSES</h2><span class="causes-badge" id="badge-scope-causes">Vue Globale</span></div>
+        <div>
+          <div class="cause-row"><span class="cause-label">SHU missing</span><div class="bar-track"><div class="bar-fill" id="bar-wms" style="background:#1E293B;"></div></div><span class="cause-count" id="cnt-wms">0</span></div>
+          <div class="cause-row"><span class="cause-label">No Storage Request</span><div class="bar-track"><div class="bar-fill" id="bar-noreq" style="background:#1D4ED8;"></div></div><span class="cause-count" id="cnt-noreq">0</span></div>
+          <div class="cause-row"><span class="cause-label">DC Fault</span><div class="bar-track"><div class="bar-fill" id="bar-dcfault" style="background:#64748B;"></div></div><span class="cause-count" id="cnt-dcfault">0</span></div>
+          <div class="cause-row" id="row-autres"><span class="cause-label" id="lbl-autres">Non trouvé / Autres</span><div class="bar-track"><div class="bar-fill" id="bar-autres" style="background:#94A3B8;"></div></div><span class="cause-count" id="cnt-autres">0</span></div>
+        </div>
+      </div>
+
+      <div class="kpi-card"><div class="kpi-title" id="t-prod">PROD PERDUE (IN)</div><div class="kpi-main"><span class="kpi-val" id="kpi-prod-perdue">0</span><span class="kpi-rate" id="t-pot">Colis potentiels</span></div></div>
+      <div class="kpi-card"><div class="kpi-title" id="t-skypod">PLACES STOCKAGE AUTO PERDUES</div><div class="kpi-main"><span class="kpi-val" id="kpi-skypod">0</span><span class="kpi-rate" id="t-emp">Emplacements</span></div></div>
+      <div class="kpi-card"><div class="kpi-title" id="t-cout">COÛT COLIS BOMBÉS</div><div class="kpi-main"><span class="kpi-val" id="kpi-cout">0 €</span><span class="kpi-rate" id="t-cout-sub">Cartons + MO</span></div></div>
+    </div>
+  </div>
+
+  <div class="bottom-grid">
+    <div class="panel">
+      <div class="panel-header"><h3 id="t-top5">🏆 TOP 5 ITEMS LES PLUS BOMBÉS</h3></div>
+      <table class="top-table">
+        <thead><tr><th id="th-item">CODE ITEM</th><th id="th-colis">COLIS</th><th id="th-part">PART</th><th id="th-edc">EXPÉDITEUR</th></tr></thead>
+        <tbody id="tbody-top5"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h3 id="t-chart">📈 ÉVOLUTION TEMPORELLE</h3>
+        <div class="toggle-group">
+          <button class="toggle-btn active" id="btn-hebdo" onclick="changerGranularite('hebdo')">Hebdomadaire</button>
+          <button class="toggle-btn" id="btn-mensuel" onclick="changerGranularite('mensuel')">Mensuel</button>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="evolutionChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const i18n = {
+    FR: {
+      lblEdc: "EXPÉDITEUR :", lblSem: "SEMAINES :", lblMois: "MOIS :", btnRefresh: "Actualiser",
+      allEdc: "Tous les expéditeurs", allSem: "Toutes les Semaines", allMois: "Tous les Mois", reset: "Réinitialiser les filtres",
+      recep: "COLIS RÉCEPTIONNÉS", rejets: "REJETS EXPÉDITEUR", bombes: "COLIS BOMBÉS", cumul: "CUMUL ANOMALIES",
+      causes: "RÉPARTITION DES CAUSES", vueGlobale: "Vue Globale (tous motifs)", vueExclus: "(non trouvés exclus)",
+      autres: "Non trouvé / Autres", top5: "🏆 TOP 5 ITEMS LES PLUS BOMBÉS", codeItem: "CODE ITEM", colis: "COLIS",
+      part: "PART", edc: "EXPÉDITEUR", chart: "📈 ÉVOLUTION TEMPORELLE", hebdo: "Hebdomadaire", mens: "Mensuel",
+      prod: "PROD PERDUE (IN)", pot: "Colis potentiels",
+      skypod: "PLACES STOCKAGE AUTO PERDUES", emp: "Emplacements",
+      legRecep: "Réception", legBombes: "Colis Bombés", legRejet: "Rejets expéditeur", legPart: "Part Cumulée (%)",
+      txtLoader: "Chargement des données...", notFound: "Non identifié",
+      tutBtn: "Tutoriel", tutTitle: "💡 Tutoriel : Explication des indicateurs", tutClose: "Fermer",
+      tutP1: "Nombre total de colis réceptionnés sur la période et l'expéditeur sélectionnés.",
+      tutP2: "Nombre de colis rejetés pour des anomalies pour lesquelles l'expéditeur peut agir (motifs SHU missing et No Storage Request uniquement). Le pourcentage indique leur part par rapport aux colis réceptionnés.",
+      tutP3: "Nombre de colis ayant subi l'action de décanting/bombage. Le pourcentage indique la part de ces colis par rapport au total réceptionné.",
+      tutP4: "Addition des Colis Bombés et des Rejets expéditeur. Attention : En vue « Tous les expéditeurs », ce cumul additionne toutes les causes de rejets confondues. Si un expéditeur spécifique est filtré, il n'additionne que les rejets reliés à cet expéditeur.",
+      tutP5: "Détail du volume de rejets selon 4 catégories (SHU missing, No Storage Request, DC Fault, et Autres). Les causes « Autres » ne s'affichent que dans la vue globale de l'entrepôt.",
+      tutP6: "Classement des 5 références d'articles générant le plus de colis bombés. La jauge « Part » indique le poids de cet article dans le total.",
+      tutP7: "Suivi dynamique de la volumétrie. L'axe de droite représente les volumes de Réception, et les courbes (axe de gauche) montrent l'évolution des anomalies et des rejets.",
+      tutP8: "Estimation de la production perdue en entrée. Calculée sur une base de 2,5 minutes perdues par colis bombé, avec une cadence théorique de 110 colis par heure.",
+      tutP9: "Emplacements supplémentaires occupés dans la zone mécanisée. Un colis bombé occupe 1.75 place au lieu de 1, soit une perte de 0.75 place par colis.",
+      mois: {"01":"Janvier","02":"Février","03":"Mars","04":"Avril","05":"Mai","06":"Juin","07":"Juillet","08":"Août","09":"Septembre","10":"Octobre","11":"Novembre","12":"Décembre"},
+      cout: "COÛT COLIS BOMBÉS", coutSub: "Cartons + MO",
+      tutP10: "Coût financier estimé du décanting : (Colis bombés × 2 cartons × 0,85 €) + (Colis bombés × 2,5 min × 15 €/h).",
+      jours: ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"],
+      vueJour: "Vue Journalière"
+
+
+    },
+    EN: {
+      lblEdc: "SHIPPER:", lblSem: "WEEKS:", lblMois: "MONTHS:", btnRefresh: "Refresh",
+      allEdc: "All shippers", allSem: "All Weeks", allMois: "All Months", reset: "Reset filters",
+      recep: "RECEIVED PARCELS", rejets: "SHIPPER REJECTS", bombes: "BULGING PARCELS", cumul: "TOTAL ANOMALIES",
+      causes: "CAUSES BREAKDOWN", vueGlobale: "Global View (all reasons)", vueExclus: "(not found excluded)",
+      autres: "Not found / Others", top5: "🏆 TOP 5 MOST BULGING ITEMS", codeItem: "ITEM CODE", colis: "PARCELS",
+      part: "SHARE", edc: "SHIPPER", chart: "📈 TIMELINE EVOLUTION", hebdo: "Weekly", mens: "Monthly",
+      prod: "LOST PROD (IN)", pot: "Potential parcels",
+      skypod: "LOST AUTO-STORAGE SPACES", emp: "Locations",
+      legRecep: "Reception", legBombes: "Bulging Parcels", legRejet: "Shipper rejects", legPart: "Cumulative Share (%)",
+      txtLoader: "Loading data...", notFound: "Unidentified",
+      tutBtn: "Tutorial", tutTitle: "💡 Tutorial: Indicators Explained", tutClose: "Close",
+      tutP1: "Total number of parcels received over the selected period and shipper.",
+      tutP2: "Number of rejected parcels for anomalies the shipper can act upon (SHU missing and No Storage Request reasons only). The percentage indicates their share relative to received parcels.",
+      tutP3: "Number of bulging / overpacked parcels. The percentage indicates the share of these parcels relative to the total received.",
+      tutP4: "Sum of Bulging Parcels and Shipper rejects. Warning: In « All shippers » view, this total adds all rejection causes combined. If a specific shipper is filtered, it only adds rejects related to that shipper.",
+      tutP5: "Breakdown of reject volumes into 4 categories (SHU missing, No Storage Request, DC Fault, and Others). The « Others » causes are only displayed in the global warehouse view.",
+      tutP6: "Ranking of the 5 item references generating the most bulging parcels. The « Share » gauge indicates this item's weight in the total.",
+      tutP7: "Dynamic volume tracking. The right axis represents Reception volumes, and the curves (left axis) show the evolution of anomalies and rejects.",
+      tutP8: "Estimation of lost inbound production. Calculated based on 2.5 minutes lost per bulging parcel, with a theoretical target of 110 parcels per hour.",
+      tutP9: "Additional locations occupied in the mechanized zone. A bulging parcel takes 1.75 spaces instead of 1, resulting in a loss of 0.75 spaces per parcel.",
+      cout: "BULGING PARCELS COST", coutSub: "Boxes + Labor",
+      tutP10: "Estimated financial cost of decanting: (Bulging parcels × 2 boxes × €0.85) + (Bulging parcels × 2.5 min × €15/h).",
+      jours: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      vueJour: "Daily View",
+      mois: {"01":"January","02":"February","03":"March","04":"April","05":"May","06":"June","07":"July","08":"August","09":"September","10":"October","11":"November","12":"December"}
+    }
+  };
+
+  let rawData = null;
+  let currLang = 'FR';
+  let granularite = 'hebdo';
+  let chartInstance = null;
+
+  function setLanguage(lang) {
+    currLang = lang;
+    document.getElementById('lang-modal').style.display = 'none';
+    document.getElementById('main-content').style.filter = 'none';
+    document.getElementById('main-content').style.pointerEvents = 'auto';
+    appliquerTraductions();
+    chargerDonnees(false);
+  }
+
+  function toggleLang() {
+    currLang = (currLang === 'FR') ? 'EN' : 'FR';
+    appliquerTraductions();
+  }
+
+  function openTut() { document.getElementById('tut-modal').style.display = 'flex'; appliquerTraductions(); }
+  function closeTut() { document.getElementById('tut-modal').style.display = 'none'; }
+
+  function appliquerTraductions() {
+    const t = i18n[currLang];
+    document.getElementById('lbl-edc').textContent = t.lblEdc;
+    document.getElementById('lbl-sem').textContent = t.lblSem;
+    document.getElementById('lbl-mois').textContent = t.lblMois;
+    document.getElementById('lbl-refresh').textContent = t.btnRefresh;
+    document.getElementById('btn-reset').textContent = t.reset;
+    document.getElementById('t-recep').textContent = t.recep;
+    document.getElementById('t-rejets').textContent = t.rejets;
+    document.getElementById('t-bombes').textContent = t.bombes;
+    document.getElementById('t-cumul').textContent = t.cumul;
+    document.getElementById('t-causes').textContent = t.causes;
+    document.getElementById('lbl-autres').textContent = t.autres;
+    document.getElementById('t-top5').textContent = t.top5;
+    document.getElementById('th-item').textContent = t.codeItem;
+    document.getElementById('th-colis').textContent = t.colis;
+    document.getElementById('th-part').textContent = t.part;
+    document.getElementById('th-edc').textContent = t.edc;
+    document.getElementById('t-chart').textContent = t.chart;
+    document.getElementById('btn-hebdo').textContent = t.hebdo;
+    document.getElementById('btn-mensuel').textContent = t.mens;
+    
+    document.getElementById('t-prod').textContent = t.prod;
+    document.getElementById('t-pot').textContent = t.pot;
+    document.getElementById('t-skypod').textContent = t.skypod;
+    document.getElementById('t-emp').textContent = t.emp;
+
+    document.getElementById('txt-loader').textContent = t.txtLoader;
+    document.getElementById('lbl-tut-btn').textContent = t.tutBtn;
+    
+    document.getElementById('tut-title').textContent = t.tutTitle;
+    document.getElementById('tut-close').textContent = t.tutClose;
+    document.getElementById('tut-h1').textContent = t.recep; document.getElementById('tut-p1').textContent = t.tutP1;
+    document.getElementById('tut-h2').textContent = t.rejets; document.getElementById('tut-p2').textContent = t.tutP2;
+    document.getElementById('tut-h3').textContent = t.bombes; document.getElementById('tut-p3').textContent = t.tutP3;
+    document.getElementById('tut-h4').textContent = t.cumul; document.getElementById('tut-p4').textContent = t.tutP4;
+    document.getElementById('tut-h5').textContent = t.causes; document.getElementById('tut-p5').textContent = t.tutP5;
+    document.getElementById('tut-h6').textContent = t.top5; document.getElementById('tut-p6').textContent = t.tutP6;
+    document.getElementById('tut-h7').textContent = t.chart; document.getElementById('tut-p7').textContent = t.tutP7;
+    document.getElementById('tut-h8').textContent = t.prod; document.getElementById('tut-p8').textContent = t.tutP8;
+    document.getElementById('tut-h9').textContent = t.skypod; document.getElementById('tut-p9').textContent = t.tutP9;
+    document.getElementById('t-cout').textContent = t.cout;
+    document.getElementById('t-cout-sub').textContent = t.coutSub;
+    document.getElementById('tut-h10').textContent = t.cout;
+    document.getElementById('tut-p10').textContent = t.tutP10;
+
+    if(rawData) { remplirFiltres(rawData); mettreAJourDashboard(); }
+  }
+
+  function formatMois(mStr) {
+    if(!mStr) return "";
+    const parts = mStr.split('/');
+    if(parts.length === 2) { return i18n[currLang].mois[parts[0]] + " " + parts[1]; }
+    return mStr;
+  }
+
+  function chargerDonnees(forceRefresh = false) {
+    document.getElementById('loader').style.display = 'flex';
+    google.script.run
+      .withSuccessHandler(function(data) {
+        try {
+          if (typeof data === 'string') data = JSON.parse(data);
+          rawData = data;
+          remplirFiltres(data);
+          mettreAJourDashboard();
+          document.getElementById('loader').style.display = 'none';
+        } catch (e) {
+          document.getElementById('loader').style.display = 'none';
+          alert("Erreur lors de l'affichage des données : " + e.message);
+        }
+      })
+      .withFailureHandler(function(err) {
+        document.getElementById('loader').style.display = 'none';
+        alert("Erreur serveur : " + err.message);
+      })
+      .getDashboardData(forceRefresh);
+  }
+
+  function remplirFiltres(data) {
+    const selCac = document.getElementById('sel-cac');
+    const selSem = document.getElementById('sel-sem');
+    const selMois = document.getElementById('sel-mois');
+    const prevCac = selCac.value, prevSem = selSem.value, prevMois = selMois.value;
+
+    selCac.innerHTML = `<option value="ALL">${i18n[currLang].allEdc}</option>`;
+    data.cacs.forEach(c => selCac.innerHTML += `<option value="${c}">${c}</option>`);
+
+    selSem.innerHTML = `<option value="ALL">${i18n[currLang].allSem}</option>`;
+    data.semaines.forEach(s => selSem.innerHTML += `<option value="${s}">S${s}</option>`);
+
+    selMois.innerHTML = `<option value="ALL">${i18n[currLang].allMois}</option>`;
+    data.mois.forEach(m => selMois.innerHTML += `<option value="${m}">${formatMois(m)}</option>`);
+
+    if ([...selCac.options].some(o => o.value === prevCac)) selCac.value = prevCac;
+    if ([...selSem.options].some(o => o.value === prevSem)) selSem.value = prevSem;
+    if ([...selMois.options].some(o => o.value === prevMois)) selMois.value = prevMois;
+  }
+
+  function reinitialiserFiltres() {
+    document.getElementById('sel-cac').value = 'ALL';
+    document.getElementById('sel-sem').value = 'ALL';
+    document.getElementById('sel-mois').value = 'ALL';
+    mettreAJourDashboard();
+  }
+
+  function changerGranularite(mode) {
+    granularite = mode;
+    document.getElementById('btn-hebdo').classList.toggle('active', mode === 'hebdo');
+    document.getElementById('btn-mensuel').classList.toggle('active', mode === 'mensuel');
+    mettreAJourDashboard();
+  }
+
+  function formatJour(jStr) {
+    if (!jStr) return "";
+    // Attend le format "yyyy-MM-dd"
+    const parts = jStr.split('-');
+    if (parts.length === 3) {
+      const dateObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      return i18n[currLang].jours[dateObj.getDay()]; // Retourne uniquement "Dimanche", "Lundi", etc.
+    }
+    return jStr;
+  }
+
+  function mettreAJourDashboard() {
+    if (!rawData) return;
+    const t = i18n[currLang];
+    const fCac = document.getElementById('sel-cac').value;
+    const fSem = document.getElementById('sel-sem').value;
+    const fMois = document.getElementById('sel-mois').value;
+    
+
+    // Bascule automatique : Si une semaine est filtrée -> mode 'jour', sinon 'granularite' choisie
+    const modeActif = (fSem !== 'ALL') ? 'jour' : granularite;
+    
+    // Masque les boutons Hebdo/Mensuel si on est filtré sur une seule semaine
+    const toggleGroup = document.querySelector('.toggle-group');
+    if (toggleGroup) {
+      toggleGroup.style.display = (fSem !== 'ALL') ? 'none' : 'inline-flex';
+    }
+
+    let totRecep = 0, totDec = 0, wmsEdc = 0, noreqEdc = 0, totalRejets = 0;
+    let causeWms = 0, causeNoReq = 0, causeDcFault = 0, causeAutres = 0;
+    const serieMap = {};
+
+    rawData.buckets.forEach(b => {
+      if (fSem !== 'ALL' && b.sem !== fSem) return;
+      if (fMois !== 'ALL' && b.mois !== fMois) return;
+
+      if (fCac === 'ALL' || b.cac === fCac) {
+        totRecep += b.recep; totDec += b.dec; wmsEdc += b.rej_wms; noreqEdc += b.rej_noreq;
+        causeWms += b.rej_wms; causeNoReq += b.rej_noreq; causeDcFault += b.rej_dcfault; causeAutres += b.rej_autres;
+        totalRejets += (b.rej_wms + b.rej_noreq + b.rej_dcfault + b.rej_autres);
+
+        // Choix de la clé temporelle selon le mode actif
+        let tKey = b.sem;
+        if (modeActif === 'jour') tKey = b.jour;
+        else if (modeActif === 'mensuel') tKey = b.mois;
+
+        if (tKey) {
+          if (!serieMap[tKey]) serieMap[tKey] = { recep: 0, dec: 0, rej: 0, cumul: 0 };
+          serieMap[tKey].recep += b.recep; 
+          serieMap[tKey].dec += b.dec;
+          serieMap[tKey].rej += (b.rej_wms + b.rej_noreq);
+          serieMap[tKey].cumul += fCac === 'ALL' ? b.dec + (b.rej_wms + b.rej_noreq + b.rej_dcfault + b.rej_autres) : b.dec + (b.rej_wms + b.rej_noreq);
+        }
+      }
+    });
+
+    const totRejetEdc = wmsEdc + noreqEdc;
+    const totCumul = fCac === 'ALL' ? (totDec + totalRejets) : (totDec + totRejetEdc);
+
+    document.getElementById('kpi-recep').textContent = totRecep.toLocaleString('fr-FR');
+    document.getElementById('kpi-rejet').textContent = totRejetEdc.toLocaleString('fr-FR');
+    document.getElementById('kpi-rejet-pct').textContent = (totRecep > 0 ? ((totRejetEdc / totRecep) * 100).toFixed(2) : "0.00") + " %";
+    document.getElementById('kpi-rejet-detail').textContent = `SHU missing : ${wmsEdc.toLocaleString('fr-FR')} | No Storage : ${noreqEdc.toLocaleString('fr-FR')}`;
+    document.getElementById('kpi-dec').textContent = totDec.toLocaleString('fr-FR');
+    document.getElementById('kpi-dec-pct').textContent = (totRecep > 0 ? ((totDec / totRecep) * 100).toFixed(2) : "0.00") + " %";
+    document.getElementById('kpi-cumul').textContent = totCumul.toLocaleString('fr-FR');
+    document.getElementById('kpi-cumul-pct').textContent = (totRecep > 0 ? ((totCumul / totRecep) * 100).toFixed(2) : "0.00") + " %";
+
+    const prodPerdue = Math.round((totDec * 2.5 / 60) * 110);
+    const placesSkypod = Math.round(totDec * 0.75);
+    const coutBombes = Math.round((totDec * 2 * 0.85) + (totDec * (2.5 / 60) * 15));
+
+    document.getElementById('kpi-prod-perdue').textContent = prodPerdue.toLocaleString('fr-FR');
+    document.getElementById('kpi-skypod').textContent = placesSkypod.toLocaleString('fr-FR');
+    document.getElementById('kpi-cout').textContent = coutBombes.toLocaleString('fr-FR') + " €";
+
+    document.getElementById('row-autres').style.display = fCac === 'ALL' ? 'grid' : 'none';
+    document.getElementById('badge-scope-causes').textContent = fCac === 'ALL' ? t.vueGlobale : fCac + " " + t.vueExclus;
+    
+    const maxC = Math.max(causeWms, causeNoReq, causeDcFault, fCac==='ALL'?causeAutres:0, 1);
+    document.getElementById('cnt-wms').textContent = causeWms.toLocaleString('fr-FR'); document.getElementById('bar-wms').style.width = ((causeWms/maxC)*100)+"%";
+    document.getElementById('cnt-noreq').textContent = causeNoReq.toLocaleString('fr-FR'); document.getElementById('bar-noreq').style.width = ((causeNoReq/maxC)*100)+"%";
+    document.getElementById('cnt-dcfault').textContent = causeDcFault.toLocaleString('fr-FR'); document.getElementById('bar-dcfault').style.width = ((causeDcFault/maxC)*100)+"%";
+    document.getElementById('cnt-autres').textContent = causeAutres.toLocaleString('fr-FR'); document.getElementById('bar-autres').style.width = ((causeAutres/maxC)*100)+"%";
+
+    document.getElementById('th-edc').style.display = fCac === 'ALL' ? 'table-cell' : 'none';
+    const itemAgg = {};
+    rawData.items.forEach(it => {
+      if (fCac !== 'ALL' && it.cac !== fCac) return;
+      if (fSem !== 'ALL' && it.sem !== fSem) return;
+      if (fMois !== 'ALL' && it.mois !== fMois) return;
+      if (!itemAgg[it.item]) itemAgg[it.item] = { qty: 0, cacs: new Set() };
+      itemAgg[it.item].qty += it.qty;
+      if(it.cac !== 'NON_IDENTIFIE') itemAgg[it.item].cacs.add(it.cac);
+    });
+
+    const top5 = Object.entries(itemAgg).sort((a, b) => b[1].qty - a[1].qty).slice(0, 5);
+    const tbody = document.getElementById('tbody-top5');
+    if (top5.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">-</td></tr>'; } 
+    else {
+      tbody.innerHTML = top5.map((entry) => {
+        const qty = entry[1].qty;
+        const part = totDec > 0 ? ((qty / totDec) * 100).toFixed(1) : "0.0";
+        const cacsHtml = fCac === 'ALL' ? `<td>${entry[1].cacs.size > 0 ? Array.from(entry[1].cacs).map(c => `<span class="edc-pill">${c}</span>`).join('') : `<span class="edc-pill" style="background:#FEE2E2; color:#DC2626;">${t.notFound}</span>`}</td>` : '';
+        return `<tr><td style="font-weight:800; color:var(--navy);">${entry[0]}</td><td>${qty.toLocaleString('fr-FR')}</td><td style="color:var(--muted);">${part} %</td>${cacsHtml}</tr>`;
+      }).join('');
+    }
+    dessinerGraphique(serieMap, t, modeActif);
+  }
+
+  function dessinerGraphique(serieMap, t, modeActif) {
+    // Tri chronologique adapté au mode (Numérique pour semaines, alphabétique YYYY-MM-DD pour jours)
+    const keys = Object.keys(serieMap).sort((a, b) => {
+      if (modeActif === 'hebdo') return Number(a) - Number(b);
+      if (modeActif === 'jour') return a.localeCompare(b);
+      return (a.split("/")[1] + a.split("/")[0]).localeCompare(b.split("/")[1] + b.split("/")[0]);
+    });
+
+    const labels = keys.map(k => {
+      if (modeActif === 'hebdo') return 'S' + k;
+      if (modeActif === 'jour') return formatJour(k);
+      return formatMois(k);
+    });
+
+    // <-- MODIF 1 : Calcul de la semaine ISO en cours
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    now.setDate(now.getDate() + 3 - (now.getDay() + 6) % 7);
+    const week1 = new Date(now.getFullYear(), 0, 4);
+    const currentWeek = String(1 + Math.round(((now.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7));
+
+    const dRecep = keys.map(k => serieMap[k].recep);
+    const dDec = keys.map(k => serieMap[k].dec);
+    const dRej = keys.map(k => serieMap[k].rej);
+    
+    // <-- MODIF 2 : Renvoie null si pas de réception ou si c'est la semaine en cours
+    // Calcul de la réception moyenne par semaine complète pour détecter les semaines incomplètes
+    const recepsValides = keys.map(k => serieMap[k].recep).filter(v => v > 0);
+    const moyenneRecep = recepsValides.length > 0 
+      ? recepsValides.reduce((a, b) => a + b, 0) / recepsValides.length 
+      : 0;
+
+    const dTaux = keys.map((k, idx) => {
+      const r = serieMap[k].recep;
+      // 1. Si aucune réception -> on masque
+      if (r <= 0) return null;
+      // 2. En vue hebdomadaire, si la réception représente moins de 25 % d'une semaine normale (extraction incomplète) -> on masque
+      if (modeActif === 'hebdo' && r < moyenneRecep * 0.25) return null;
+      
+      return Number(((serieMap[k].cumul / r) * 100).toFixed(2));
+    });
+
+    const ctx = document.getElementById('evolutionChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    Chart.defaults.font.family = "'Segoe UI', sans-serif";
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: t.legRecep, type: 'bar', data: dRecep, backgroundColor: 'rgba(203, 213, 225, 0.4)', yAxisID: 'yRecep', order: 4 },
+          { label: t.legBombes, data: dDec, borderColor: '#6366F1', backgroundColor: '#6366F1', tension: 0.3, yAxisID: 'y', order: 2 },
+          { label: t.legRejet, data: dRej, borderColor: '#16A34A', backgroundColor: '#16A34A', tension: 0.3, yAxisID: 'y', order: 3 },
+          { label: t.legPart, data: dTaux, borderColor: '#D97706', borderDash: [5, 5], tension: 0.3, yAxisID: 'yTaux', order: 1 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { position: 'top', labels: { usePointStyle: true, font: { weight: 'bold' } } } },
+        scales: {
+          y: { type: 'linear', position: 'left', beginAtZero: true, grid: { color: '#F1F5F9' } },
+          yRecep: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, min: 0 },
+          yTaux: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, min: 0 }
+        }
+      }
+    });
+  }
+
+  </script>
+</body>
+</html>
