@@ -35,9 +35,9 @@ Application web : liste des camions, KPI, ordre de priorité des travées
 - Application web : KPI, tableau des camions, bandeau des travées « en promesse » / « hors promesse », validation locale des lignes traitées.
 - En démo, « maintenant » est figé sur le dernier archivage pour que l'exemple reste lisible.
 
-## Captures
+## Dashboard
 
-_(à ajouter : `captures/reception.png`)_
+Lien dans le fichier principal
 
 ## Fichiers
 
