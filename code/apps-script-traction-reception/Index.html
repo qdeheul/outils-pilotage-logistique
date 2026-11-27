@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <title>Réception - Démo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            demo: {
+              blue: '#1D4ED8',
+              green: '#10B981',
+              amber: '#F59E0B'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #F8FAFC;
+      user-select: none;
+    }
+
+    /* Ligne validée visuellement (100 % local) */
+    tr.row-done {
+      background-color: #F8FAFC !important;
+      opacity: 0.45;
+    }
+    tr.row-done td {
+      text-decoration: line-through;
+      color: #94A3B8 !important;
+    }
+    tr.row-done td:first-child,
+    tr.row-done td:last-child button {
+      text-decoration: none;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F1F5F9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+
+    @keyframes slideInUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-toast {
+      animation: slideInUp 0.3s ease-out forwards;
+    }
+  </style>
+</head>
+
+<body class="flex flex-col h-screen text-slate-800 antialiased font-sans">
+
+  <!-- ========================================== -->
+  <!-- 1. EN-TÊTE FIXE                             -->
+  <!-- ========================================== -->
+  <header class="bg-[#1D4ED8] text-white h-14 px-6 flex items-center justify-between shadow-md shrink-0 z-20">
+    <div class="flex items-center space-x-3 cursor-pointer" onclick="refreshSector86()" title="Actualiser le tableau">
+      <div class="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center text-white border border-white/20">
+        <i class="fa-solid fa-boxes-stacked text-lg"></i>
+      </div>
+      <div>
+        <h1 class="text-base font-black tracking-wide leading-tight">
+          RÉCEPTION
+        </h1>
+        <p class="text-[10px] uppercase tracking-widest text-blue-200 font-semibold">Démo – données fictives</p>
+      </div>
+    </div>
+
+    <div class="flex items-center space-x-3">
+      <!-- Badge Live Sync -->
+      <div class="flex items-center space-x-2 bg-black/20 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
+        <span class="text-slate-200">Live Sync</span>
+      </div>
+
+      <!-- Horloge Temps Réel -->
+      <div id="live-clock" class="bg-black/30 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-mono font-bold tracking-wider">
+        00:00:00
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- 2. DASHBOARD SECTEUR 86 (PAGE UNIQUE)      -->
+  <!-- ========================================== -->
+  <main class="flex-1 min-h-0 p-4 flex flex-col overflow-hidden">
+    
+    <!-- Barre Titre + Ordre des Travées + Hors Promesse + Camions -->
+    <div class="flex flex-wrap xl:flex-nowrap items-center justify-between gap-3 mb-3 shrink-0">
+      
+      <!-- Gauche : Titre Secteur -->
+      <div class="shrink-0">
+        <h2 class="text-lg font-black text-slate-800 tracking-tight">Type produit 1</h2>
+        <p class="text-[10px] font-bold text-[#1D4ED8] uppercase tracking-wider">TABLEAU DE BORD DE SUIVI</p>
+      </div>
+
+      <!-- Centre : Ordre des travées à réceptionner + Case Hors Promesse -->
+      <div class="flex-1 min-w-0 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+        
+        <!-- Case 1 : Ordre des travées à réceptionner (En promesse) -->
+        <div class="flex-1 min-w-0 bg-white border border-blue-200/90 rounded-xl px-3.5 py-2 shadow-xs flex items-center gap-2.5 overflow-hidden">
+          <div class="shrink-0 flex items-center gap-1.5 text-[10px] font-black text-[#1D4ED8] uppercase tracking-wider border-r border-slate-200 pr-2.5">
+            <i class="fa-solid fa-list-ol"></i>
+            <span>Ordre travées</span>
+          </div>
+          <div id="travees-order-list" class="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto text-xs font-bold text-slate-700 whitespace-nowrap py-0.5">
+            <span class="text-slate-400 font-medium text-[11px]">Calcul en cours...</span>
+          </div>
+        </div>
+
+        <!-- Case 2 : Hors Promesse (Heure dépassée) -->
+        <div class="sm:w-72 lg:w-80 shrink-0 bg-red-50/80 border border-red-200 rounded-xl px-3.5 py-2 shadow-xs flex items-center gap-2.5 overflow-hidden">
+          <div class="shrink-0 flex items-center gap-1.5 text-[10px] font-black text-red-600 uppercase tracking-wider border-r border-red-200 pr-2.5">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Hors promesse</span>
+          </div>
+          <div id="travees-hp-list" class="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto text-xs font-bold text-red-700 whitespace-nowrap py-0.5">
+            <span class="text-red-400/80 font-medium text-[11px]">Aucune</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Droite : Compteur Camions + Synchro -->
+      <div class="shrink-0 flex items-center space-x-2">
+        <div class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm text-xs font-bold text-slate-700 flex items-center space-x-1.5">
+          <i class="fa-solid fa-truck text-[#1D4ED8]"></i>
+          <span>Camions : <span id="camion-count" class="font-black text-[#1D4ED8]">0</span></span>
+        </div>
+
+        <div class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm text-xs font-semibold text-slate-500 flex items-center space-x-1.5">
+          <i class="fa-regular fa-clock"></i>
+          <span id="last-sync-time">--:--</span>
+        </div>
+
+        <button onclick="refreshSector86()" class="w-9 h-9 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 flex items-center justify-center text-[#1D4ED8] transition-colors cursor-pointer" title="Actualiser">
+          <i id="refresh-icon" class="fa-solid fa-rotate-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3 CARTES KPIS -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3 shrink-0">
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+        <div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">TOTAL À RÉCEPTIONNER JOURNÉE</span>
+          <div id="kpi-total" class="text-2xl font-black text-[#1D4ED8] mt-0.5">
+            <i class="fa-solid fa-circle-notch fa-spin text-sm text-slate-300"></i>
+          </div>
+        </div>
+        <div class="w-10 h-10 rounded-lg bg-blue-50 text-[#1D4ED8] flex items-center justify-center text-lg">
+          <i class="fa-solid fa-boxes-stacked"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+        <div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">RESTANT À RÉCEPTIONNER</span>
+          <div id="kpi-entrepot" class="text-2xl font-black text-[#10B981] mt-0.5">
+            <i class="fa-solid fa-circle-notch fa-spin text-sm text-slate-300"></i>
+          </div>
+        </div>
+        <div class="w-10 h-10 rounded-lg bg-emerald-50 text-[#10B981] flex items-center justify-center text-lg">
+          <i class="fa-solid fa-warehouse"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+        <div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">EN ACHEMINEMENT</span>
+          <div id="kpi-acheminement" class="text-2xl font-black text-[#F59E0B] mt-0.5">
+            <i class="fa-solid fa-circle-notch fa-spin text-sm text-slate-300"></i>
+          </div>
+        </div>
+        <div class="w-10 h-10 rounded-lg bg-amber-50 text-[#F59E0B] flex items-center justify-center text-lg">
+          <i class="fa-solid fa-truck-ramp-box"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLEAU UNIQUE RÉÉQUILIBRÉ POUR TOUS ÉCRANS -->
+    <div class="flex-1 min-h-0 bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-y-auto">
+      <table class="w-full table-fixed text-left text-xs xl:text-sm border-collapse">
+        <thead class="sticky top-0 bg-slate-50 z-10 border-b border-slate-200 shadow-xs text-[11px] xl:text-xs">
+          <tr>
+            <th class="py-3 px-2 text-center w-14 text-[#10B981]">FAIT</th>
+            <th class="py-3 px-3 w-[11%]">HEURE PRÉVUE</th>
+            <th class="py-3 px-3 w-[11%] text-[#1D4ED8]"><i class="fa-solid fa-arrow-down-short-wide mr-1"></i>HEURE ARRIVÉE</th>
+            <th class="py-3 px-3 w-[11%]">HEURE DÉCHARG.</th>
+            <th class="py-3 px-3 w-[12%] text-red-500">HORS PROMESSE</th>
+            <th class="py-3 px-4 w-[16%]">N° EXPÉDITION</th>
+            <th class="py-3 px-4 w-[12%] text-[#1D4ED8]">QUANTITÉ</th>
+            <th class="py-3 px-4 w-auto">TRAVÉE</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr>
+            <td colspan="8" class="py-12 text-center text-slate-400">
+              <i class="fa-solid fa-circle-notch fa-spin text-lg text-[#1D4ED8]"></i>
+              <p class="mt-2 font-medium">Chargement des données...</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- Toast de notification -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-lg border border-slate-700 hidden items-center space-x-2 z-50">
+    <i class="fa-solid fa-circle-check text-[#10B981] text-sm"></i>
+    <span id="toast-message">Action validée</span>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 4. LOGIQUE JAVASCRIPT                      -->
+  <!-- ========================================== -->
+  <script>
+    const STORAGE_KEY_TRAVEES = 'demo_custom_travees_v1';
+    window.localCheckedState = window.localCheckedState || {};
+    window.currentRowsData = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+      demarrerHorloge();
+      refreshSector86();
+      setInterval(refreshSector86, 30000);
+    });
+
+    // Horloge en direct + recalcul périodique des échéances hors promesse
+    function demarrerHorloge() {
+      function tick() {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        const s = String(now.getSeconds()).padStart(2, '0');
+        const el = document.getElementById('live-clock');
+        if (el) el.innerText = `${h}:${m}:${s}`;
+
+        // Réévaluation automatique à chaque changement de minute
+        if (s === '00' && window.currentRowsData.length > 0) {
+          updateTraveesBanner();
+        }
+      }
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    // Gestion du stockage local des travées personnalisées
+    function getCustomTraveesMap() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY_TRAVEES) || '{}');
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function getRowStorageKey(r) {
+      return `${r.numExpedition}_${r.rowDateStr || r.rowIndex}`;
+    }
+
+    function getEffectiveTravee(r) {
+      const map = getCustomTraveesMap();
+      const key = getRowStorageKey(r);
+      if (map[key] && map[key].trim() !== '') {
+        return map[key].trim();
+      }
+      return (r.travee && r.travee.trim() !== '') ? r.travee.trim() : '-';
+    }
+
+    function saveCustomTravee(rowIndex, newValue) {
+      const rowObj = window.currentRowsData.find(item => item.rowIndex === rowIndex);
+      if (!rowObj) return;
+
+      const map = getCustomTraveesMap();
+      const key = getRowStorageKey(rowObj);
+      const cleaned = String(newValue || '').trim();
+
+      if (cleaned === '' || cleaned === '-') {
+        delete map[key];
+      } else {
+        map[key] = cleaned;
+      }
+
+      localStorage.setItem(STORAGE_KEY_TRAVEES, JSON.stringify(map));
+      renderTableRows();
+      updateTraveesBanner();
+      showToast(cleaned ? `Travée "${cleaned}" enregistrée` : 'Travée réinitialisée');
+    }
+
+    // Ouverture de la saisie inline (+ -> input -> Entrée)
+    function openTraveeInput(rowIndex) {
+      const container = document.getElementById(`travee-cell-${rowIndex}`);
+      const rowObj = window.currentRowsData.find(item => item.rowIndex === rowIndex);
+      if (!container || !rowObj) return;
+
+      const currentVal = getEffectiveTravee(rowObj);
+      const initialInputVal = (currentVal === '-') ? '' : currentVal;
+
+      container.innerHTML = `
+        <div class="flex items-center gap-1.5 w-full">
+          <input type="text" id="input-travee-${rowIndex}" value="${escapeHtml(initialInputVal)}" placeholder="Travée..."
+            class="w-full text-xs font-bold text-slate-800 bg-white border-2 border-[#1D4ED8] rounded-lg px-2 py-1 focus:outline-none shadow-xs">
+          <button type="button" onclick="confirmTraveeInput(${rowIndex})" class="shrink-0 w-6 h-6 rounded-md bg-[#10B981] text-white flex items-center justify-center hover:bg-emerald-600 cursor-pointer" title="Valider (Entrée)">
+            <i class="fa-solid fa-check text-[10px]"></i>
+          </button>
+        </div>
+      `;
+
+      const inputEl = document.getElementById(`input-travee-${rowIndex}`);
+      if (inputEl) {
+        inputEl.focus();
+        inputEl.select();
+        inputEl.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            saveCustomTravee(rowIndex, inputEl.value);
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            renderTableRows();
+          }
+        });
+      }
+    }
+
+    function confirmTraveeInput(rowIndex) {
+      const inputEl = document.getElementById(`input-travee-${rowIndex}`);
+      if (inputEl) {
+        saveCustomTravee(rowIndex, inputEl.value);
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function refreshSector86() {
+      const icon = document.getElementById('refresh-icon');
+      if (icon) icon.classList.add('fa-spin');
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(renderDashboard)
+          .withFailureHandler(function(err) {
+            console.error("Erreur Dashboard :", err);
+            if (icon) icon.classList.remove('fa-spin');
+            document.getElementById('kpi-total').innerText = '0';
+            document.getElementById('kpi-entrepot').innerText = '0';
+            document.getElementById('kpi-acheminement').innerText = '0';
+            document.getElementById('table-body').innerHTML = `
+              <tr>
+                <td colspan="8" class="py-12 text-center text-red-500 font-medium">
+                  Erreur de chargement : ${err.message || err}
+                </td>
+              </tr>`;
+          })
+          .getRecepDashboardData('86');
+      }
+    }
+
+    function renderDashboard(data) {
+      window.demoNowMs = data.demoNowMs || null;
+      const icon = document.getElementById('refresh-icon');
+      if (icon) icon.classList.remove('fa-spin');
+
+      if (!data || !data.kpis) return;
+
+      window.currentRowsData = data.rows || [];
+
+      // 1. Cartes KPIs
+      document.getElementById('kpi-total').innerText = data.kpis.totalSecteur || '0';
+      document.getElementById('kpi-entrepot').innerText = data.kpis.receptionnee || '0';
+      document.getElementById('kpi-acheminement').innerText = data.kpis.restante || '0';
+
+      // 2. Compteur Camions & Horodatage
+      const nbCamions = window.currentRowsData.length || (data.kpis.totalCamions || 0);
+      document.getElementById('camion-count').innerText = nbCamions;
+
+      const now = new Date();
+      document.getElementById('last-sync-time').innerText = 
+        String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+      // 3. Rendu du tableau et des bandeaux de travées
+      renderTableRows();
+      updateTraveesBanner();
+    }
+
+    function renderTableRows() {
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+
+      if (!window.currentRowsData || window.currentRowsData.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="py-12 text-center text-slate-400 font-medium">
+              Aucun camion enregistré.
+            </td>
+          </tr>`;
+        return;
+      }
+
+      window.currentRowsData.forEach(r => {
+        const isDone = !!window.localCheckedState[r.rowIndex];
+        const traveeDisplay = getEffectiveTravee(r);
+
+        const tr = document.createElement('tr');
+        tr.className = `border-b border-slate-100 hover:bg-blue-50/40 transition-colors ${isDone ? 'row-done' : ''}`;
+
+        tr.innerHTML = `
+          <td class="py-2.5 px-2 text-center">
+            <input type="checkbox" onchange="triggerToggle(this, ${r.rowIndex})" ${isDone ? 'checked' : ''} class="w-4 h-4 text-[#1D4ED8] rounded border-slate-300 focus:ring-0 cursor-pointer">
+          </td>
+          <td class="py-2.5 px-3 text-slate-600 font-medium truncate">${r.hPrevue || '-'}</td>
+          <td class="py-2.5 px-3 text-slate-700 font-semibold truncate">${r.hArrivee || '-'}</td>
+          <td class="py-2.5 px-3 text-slate-600 truncate">${r.hDechargement || '-'}</td>
+          <td class="py-2.5 px-3 text-red-500 font-semibold truncate">${r.hHorsPromesse || '-'}</td>
+          <td class="py-2.5 px-4 font-bold text-slate-800 truncate">${r.numExpedition || '-'}</td>
+          <td class="py-2.5 px-4 font-black text-[#1D4ED8]">${Number(r.quantite || 0).toLocaleString('fr-FR')}</td>
+          <td id="travee-cell-${r.rowIndex}" class="py-2 px-4 font-bold text-slate-700">
+            <div class="flex items-center justify-between gap-2">
+              <span class="truncate" title="${escapeHtml(traveeDisplay)}">${escapeHtml(traveeDisplay)}</span>
+              <button type="button" onclick="openTraveeInput(${r.rowIndex})" title="Ajouter / modifier la travée"
+                class="shrink-0 w-6 h-6 rounded-md bg-slate-100 hover:bg-[#1D4ED8] text-slate-500 hover:text-white border border-slate-200/80 flex items-center justify-center transition-colors cursor-pointer">
+                <i class="fa-solid fa-plus text-[10px]"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Coche 100 % locale : barre la ligne et retire immédiatement sa travée du bandeau
+    function triggerToggle(checkboxElement, rowIndex) {
+      const isChecked = checkboxElement.checked;
+      window.localCheckedState[rowIndex] = isChecked;
+
+      const row = checkboxElement.closest('tr');
+      if (row) {
+        if (isChecked) {
+          row.classList.add('row-done');
+        } else {
+          row.classList.remove('row-done');
+        }
+      }
+      updateTraveesBanner();
+    }
+
+    // Parsing d'une heure HH:mm en minutes depuis minuit
+    function parseHoursMinutes(str) {
+      if (!str || str === '-') return null;
+      const m = String(str).match(/(\d{1,2}):(\d{2})/);
+      if (!m) return null;
+      return { h: parseInt(m[1], 10), m: parseInt(m[2], 10) };
+    }
+
+    // Calcul des bandeaux "Ordre des travées" et "Hors promesse"
+    function updateTraveesBanner() {
+      const orderContainer = document.getElementById('travees-order-list');
+      const hpContainer = document.getElementById('travees-hp-list');
+      if (!orderContainer || !hpContainer) return;
+
+      const now = new Date();
+      const nowMs = window.demoNowMs || now.getTime(); // DÉMO
+
+      // 1. Préparer les camions actifs (non cochés FAIT) triés par ordre d'arrivée chronologique
+      const enriched = window.currentRowsData
+        .filter(r => !window.localCheckedState[r.rowIndex])
+        .map(r => {
+          // Date de référence de la ligne (Col A)
+          let baseDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+          if (r.rowDateStr) {
+            const parts = r.rowDateStr.split('-');
+            if (parts.length === 3) {
+              baseDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 0, 0, 0);
+            }
+          }
+
+          // Timestamp d'arrivée (ou heure prévue si pas encore arrivé)
+          const arrHM = parseHoursMinutes(r.hArrivee) || parseHoursMinutes(r.hPrevueTime) || { h: 0, m: 0 };
+          const arriveeTs = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), arrHM.h, arrHM.m, 0).getTime();
+
+          // Timestamp d'échéance Hors Promesse (si renseigné)
+          const hpHM = parseHoursMinutes(r.hHorsPromesse);
+          let hpDeadlineTs = null;
+
+          if (hpHM) {
+            let hpDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), hpHM.h, hpHM.m, 0);
+            // Si l'heure HP est inférieure à l'heure de déchargement/arrivée (passage minuit), l'échéance est le lendemain
+            const refHM = parseHoursMinutes(r.hDechargement) || arrHM;
+            if (refHM && (hpHM.h * 60 + hpHM.m) < (refHM.h * 60 + refHM.m)) {
+              hpDate.setDate(hpDate.getDate() + 1);
+            }
+            hpDeadlineTs = hpDate.getTime();
+          }
+
+          return {
+            raw: r,
+            travee: getEffectiveTravee(r),
+            arriveeTs: arriveeTs,
+            hpDeadlineTs: hpDeadlineTs,
+            isHorsPromesse: false,
+            effectiveSortKey: 0
+          };
+        });
+
+      // Tri initial par heure d'arrivée pour connaître le camion arrivé juste avant
+      enriched.sort((a, b) => a.arriveeTs - b.arriveeTs);
+
+      // 2. Attribution du statut Hors Promesse et de la clé de priorité
+      for (let i = 0; i < enriched.length; i++) {
+        const item = enriched[i];
+        if (item.hpDeadlineTs !== null) {
+          item.isHorsPromesse = (nowMs > item.hpDeadlineTs);
+          item.effectiveSortKey = item.hpDeadlineTs;
+        } else {
+          // Si Hors Promesse est vide : se place juste après le camion arrivé juste avant
+          if (i > 0) {
+            item.isHorsPromesse = enriched[i - 1].isHorsPromesse;
+            item.effectiveSortKey = enriched[i - 1].effectiveSortKey + 1;
+          } else {
+            item.isHorsPromesse = false;
+            item.effectiveSortKey = item.arriveeTs;
+          }
+        }
+      }
+
+      // 3. Filtrage des lignes ayant une travée renseignée (!= '-') et tri par urgence (moins il reste de temps = priorité)
+      const withTravee = enriched.filter(item => item.travee && item.travee !== '-');
+
+      const enPromesse = withTravee
+        .filter(item => !item.isHorsPromesse)
+        .sort((a, b) => a.effectiveSortKey - b.effectiveSortKey);
+
+      const horsPromesse = withTravee
+        .filter(item => item.isHorsPromesse)
+        .sort((a, b) => a.effectiveSortKey - b.effectiveSortKey);
+
+      // 4. Rendu visuel de la Case 1 : Ordre des travées à réceptionner
+      if (enPromesse.length === 0) {
+        orderContainer.innerHTML = `<span class="text-slate-400 font-medium text-[11px]">Aucune travée en attente</span>`;
+      } else {
+        orderContainer.innerHTML = enPromesse.map((item, idx) => {
+          const hpLabel = (item.raw.hHorsPromesse && item.raw.hHorsPromesse !== '-') ? ` <span class="text-[10px] font-medium text-blue-500">(${item.raw.hHorsPromesse})</span>` : '';
+          const sep = idx < enPromesse.length - 1 ? `<i class="fa-solid fa-chevron-right text-[9px] text-slate-300 shrink-0"></i>` : '';
+          return `
+            <span class="inline-flex items-center gap-1 bg-blue-50 text-[#1D4ED8] border border-blue-200/80 px-2 py-0.5 rounded-md text-[11px] font-extrabold shrink-0">
+              <span class="text-blue-400">${idx + 1}.</span> ${escapeHtml(item.travee)}${hpLabel}
+            </span>${sep}
+          `;
+        }).join('');
+      }
+
+      // 5. Rendu visuel de la Case 2 : Hors Promesse
+      if (horsPromesse.length === 0) {
+        hpContainer.innerHTML = `<span class="text-emerald-600 font-semibold text-[11px]"><i class="fa-solid fa-check mr-1"></i>Aucune</span>`;
+      } else {
+        hpContainer.innerHTML = horsPromesse.map(item => {
+          return `
+            <span class="inline-flex items-center gap-1 bg-red-600 text-white px-2 py-0.5 rounded-md text-[11px] font-extrabold shrink-0 shadow-2xs">
+              ${escapeHtml(item.travee)}
+            </span>
+          `;
+        }).join('');
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').innerText = message;
+      toast.classList.remove('hidden');
+      toast.classList.add('flex');
+
+      setTimeout(() => {
+        toast.classList.add('hidden');
+        toast.classList.remove('flex');
+      }, 3500);
+    }
+  </script>
+
+</body>
+</html>
