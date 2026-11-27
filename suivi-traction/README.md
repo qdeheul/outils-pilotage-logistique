@@ -39,6 +39,9 @@ Data volumes (historique)  +  Extractions du logiciel RDV (1 fichier / semaine, 
 - Classement des transporteurs (taux de retard, alerte au-delà de 15 %) ;
 - Évolution hebdomadaire et mensuelle ; filtres par expéditeur, semaine, mois ; interface FR / EN / ES.
 
+## Dashboard
+
+Lien dans le fichier principal
 
 ## Fichiers
 
