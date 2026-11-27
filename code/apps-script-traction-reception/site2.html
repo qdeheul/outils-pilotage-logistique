@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Suivi Traction - Démo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      background-color: #F3F5F8;
+      color: #2B2B2B;
+    }
+    .bg-dark-blue { background-color: #1E293B; }
+    .logo-white { filter: brightness(0) invert(1); }
+    .card-box { 
+      background-color: #FFFFFF; 
+      border: 1px solid #E2E8F0; 
+      border-radius: 8px;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+    }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #F1F5F9; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+  </style>
+</head>
+<body class="p-2 sm:p-3 w-full h-screen flex flex-col justify-between box-border relative">
+
+  <!-- OVERLAY POPUP LANGUE -->
+  <div id="langPopup" class="absolute inset-0 bg-slate-900/80 z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 text-center max-w-sm w-full mx-4">
+      <h2 class="text-[#1E293B] text-xl font-black mb-2">Bienvenue / Welcome / Bienvenido</h2>
+      <p class="text-slate-500 text-sm font-medium mb-6">Choisissez votre langue / Choose your language / Elige tu idioma</p>
+      
+      <div class="flex justify-center gap-8">
+        <button onclick="chooseLangInit('fr')" class="hover:scale-110 transition transform text-4xl font-black text-slate-700 hover:text-[#1E293B]" title="Français">FR</button>
+        <button onclick="chooseLangInit('en')" class="hover:scale-110 transition transform text-4xl font-black text-slate-700 hover:text-[#1E293B]" title="English">EN</button>
+        <button onclick="chooseLangInit('es')" class="hover:scale-110 transition transform text-4xl font-black text-slate-700 hover:text-[#1E293B]" title="Español">ES</button>
+      </div>
+
+      <div class="mt-8">
+        <button onclick="openTutorial()" class="px-4 py-2 bg-slate-100 text-[#1D4ED8] rounded-lg font-bold text-xs hover:bg-slate-200 transition border border-slate-200" data-i18n="btn_tutorial">
+          💡 Tutoriel : Explication des indicateurs
+        </button>
+      </div>
+
+      <div class="mt-6 flex items-center justify-center space-x-2 text-xs text-slate-400">
+        <span class="w-4 h-4 border-2 border-[#16A34A] border-t-transparent rounded-full animate-spin"></span>
+        <span>Chargement des données en arrière-plan...</span>
+      </div>
+    </div>
+  </div>
+
+ <!-- OVERLAY TUTORIEL -->
+  <div id="tutorialOverlay" class="hidden absolute inset-0 bg-slate-900/85 z-[60] flex items-center justify-center p-3 md:p-6 backdrop-blur-sm">
+    <div class="bg-[#F3F5F8] rounded-xl shadow-2xl w-full max-w-7xl max-h-[92vh] flex flex-col overflow-hidden">
+      
+      <!-- HEADER TUTORIEL -->
+      <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-white shrink-0">
+        <h2 class="text-[#1E293B] text-lg font-black flex items-center gap-2">
+          <span class="text-xl">💡</span> <span data-i18n="tut_title">Tutoriel : Explication des indicateurs</span>
+        </h2>
+        <div class="flex items-center gap-4">
+          <div class="flex items-center space-x-2 bg-[#0F172A] px-2 py-1 rounded-md border border-[#1D4ED8]">
+            <button onclick="setLang('fr')" class="lang-btn opacity-100 scale-110 transition text-xs font-bold text-white px-2" data-lang="fr">FR</button>
+            <button onclick="setLang('en')" class="lang-btn opacity-50 hover:opacity-100 transition text-xs font-bold text-white px-2" data-lang="en">EN</button>
+            <button onclick="setLang('es')" class="lang-btn opacity-50 hover:opacity-100 transition text-xs font-bold text-white px-2" data-lang="es">ES</button>
+          </div>
+          <button onclick="closeTutorial()" class="bg-rose-100 text-rose-600 px-4 py-1.5 rounded-md text-sm font-bold hover:bg-rose-200 transition" data-i18n="btn_close">Fermer</button>
+        </div>
+      </div>
+
+      <!-- CONTENU TUTORIEL (Hauteur ajustée au contenu + texte agrandi) -->
+      <div class="p-4 overflow-y-auto space-y-3">
+        
+        <!-- SECTION HAUTE : INDICATEURS -->
+        <section class="grid grid-cols-12 gap-3 items-stretch">
+          
+          <!-- Bloc Gauche : Volumes & Palettes -->
+          <div class="col-span-12 lg:col-span-4 grid grid-cols-2 gap-2.5">
+            <div class="card-box p-3.5 flex flex-col justify-center items-center text-center border-b-2 border-b-[#8BABFE]">
+              <span class="text-xs font-extrabold text-slate-600 uppercase mb-1.5" data-i18n="kpi_camions">Camions</span>
+              <p class="text-xs text-slate-700 leading-relaxed" data-i18n="tut_camions">Nombre total de camions enregistrés sur la période sélectionnée.</p>
+            </div>
+            <div class="card-box p-3.5 flex flex-col justify-center items-center text-center border-b-2 border-b-[#8BABFE]">
+              <span class="text-xs font-extrabold text-slate-600 uppercase mb-1.5" data-i18n="kpi_pal_b">Nb palettes - de B</span>
+              <p class="text-xs text-slate-700 leading-relaxed" data-i18n="tut_pal_b">Nombre total de palettes en état - de B.</p>
+            </div>
+            <div class="card-box p-3.5 flex flex-col justify-center items-center text-center border-b-2 border-b-[#8BABFE]">
+              <span class="text-xs font-extrabold text-slate-600 uppercase mb-1.5" data-i18n="kpi_ecart_pal">Écart Palettes (logiciel - Réel)</span>
+              <p class="text-xs text-slate-700 leading-relaxed" data-i18n="tut_ecart_pal">Différence totale calculée entre les palettes annoncées (logiciel) et réelles.</p>
+            </div>
+            <div class="card-box p-3.5 flex flex-col justify-center items-center text-center border-b-2 border-b-[#8BABFE]">
+              <span class="text-xs font-extrabold text-slate-600 uppercase mb-1.5" data-i18n="kpi_camion_ecart">Camion avec un écart palettes</span>
+              <p class="text-xs text-slate-700 leading-relaxed" data-i18n="tut_camion_ecart">Pourcentage de camions contrôlés présentant un écart sur le nombre de palettes.</p>
+            </div>
+          </div>
+
+          <!-- Bloc Centre : Retards -->
+          <div class="col-span-12 lg:col-span-4 card-box p-3.5 flex items-stretch gap-3 border-b-2 border-b-[#16A34A]">
+            <div class="w-5/12 border border-slate-200 rounded-lg p-3 bg-slate-50 flex flex-col justify-center text-center">
+              <span class="text-xs font-extrabold text-slate-600 uppercase mb-1.5" data-i18n="kpi_retard">En retard</span>
+              <p class="text-xs text-slate-700 leading-relaxed" data-i18n="tut_retard">Nombre et part des camions arrivés après l'horaire de réception prévu.</p>
+            </div>
+            <div class="w-7/12 flex flex-col justify-center text-center p-2">
+              <span class="text-xs font-extrabold text-slate-600 uppercase mb-1.5" data-i18n="tut_tranches_titre">Tranches de retard</span>
+              <p class="text-xs text-slate-700 leading-relaxed" data-i18n="tut_tranches_desc">Répartition du volume de retards par durée (15-45, 45-90, +90 min).</p>
+            </div>
+          </div>
+
+          <!-- Bloc Droite : Tractions -->
+          <div class="col-span-12 lg:col-span-4 grid grid-cols-2 gap-2.5">
+            <div class="card-box p-3.5 flex flex-col justify-center items-center text-center border-b-2 border-b-[#8BABFE]">
+              <span class="text-xs font-extrabold text-slate-600 uppercase mb-1.5" data-i18n="kpi_controle">Camions contrôlés</span>
+              <p class="text-xs text-slate-700 leading-relaxed" data-i18n="tut_controle">Nombre de camions dont la traction a été contrôlée (sert de base pour %).</p>
+            </div>
+            <div class="card-box p-3.5 flex flex-col justify-center items-center text-center border-b-2 border-b-[#6366F1]">
+              <span class="text-xs font-extrabold text-slate-600 uppercase mb-1.5" data-i18n="kpi_nok_slots">TRACTION NOK (Hors SLOTS)</span>
+              <p class="text-xs text-slate-700 leading-relaxed" data-i18n="tut_nok_slots">Nombre et part de RDV pris hors créneaux.</p>
+            </div>
+            <div class="card-box p-3.5 flex flex-col justify-center items-center text-center border-b-2 border-b-[#6366F1]">
+              <span class="text-[11px] font-extrabold text-slate-600 uppercase mb-1.5" data-i18n="kpi_nok_logiciel">TRACTION NOK (Contenu logiciel OK)</span>
+              <p class="text-xs text-slate-700 leading-relaxed" data-i18n="tut_nok_logiciel">TRACTION NOK = 0 alors que LOGICIEL OK = 1. Erreur de saisie dans le logiciel de RDV menant à RDV hors créneaux.</p>
+            </div>
+            <div class="card-box p-3.5 flex flex-col justify-center items-center text-center border-b-2 border-b-[#6366F1]">
+              <span class="text-[11px] font-extrabold text-slate-600 uppercase mb-1.5" data-i18n="kpi_nok_reel">TRACTION NOK (Contenu Réel)</span>
+              <p class="text-xs text-slate-700 leading-relaxed" data-i18n="tut_nok_reel">RDV pris hors créneaux (contenu réel, cas logiciel OK déduits).</p>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- SECTION BASSE : TABLEAU & GRAPHIQUE -->
+        <section class="grid grid-cols-12 gap-3">
+          <div class="col-span-12 lg:col-span-6 card-box p-3.5 flex flex-col justify-center bg-white gap-2">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">🚚</span>
+              <p class="text-xs font-bold text-slate-600 leading-relaxed" data-i18n="tut_table_desc">Ici se trouve le classement des transporteurs selon leur volume de camions et leur taux de retard sur la période sélectionnée.</p>
+            </div>
+            <div class="flex items-center gap-2 bg-[#16A34A]/10 border border-[#16A34A]/30 px-3 py-1.5 rounded">
+              <span class="animate-bounce text-base">👆</span>
+              <span class="text-[11px] font-black text-[#16A34A] uppercase" data-i18n="tut_table_click">NOUVEAU : Cliquez sur le nombre de retards (en vert) pour voir le détail des camions !</span>
+            </div>
+          </div>
+          <div class="col-span-12 lg:col-span-6 card-box p-3.5 flex items-center bg-white gap-3">
+            <span class="text-2xl">📈</span>
+            <p class="text-xs font-bold text-slate-600 leading-relaxed" data-i18n="tut_chart_desc">Ici s'affiche l'évolution des volumes, des retards et des tractions NOK, par semaine ou par mois.</p>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- POP-UP DETAILS RETARDS TRANSPORTEUR -->
+  <div id="retardDetailsPopup" class="hidden absolute inset-0 bg-slate-900/80 z-[70] flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+       <div class="flex items-center justify-between p-4 border-b border-slate-200">
+           <h2 class="text-[#1E293B] text-lg font-black" id="retardPopupTitle">-</h2>
+           <div class="flex gap-2">
+               <button onclick="copyRetards()" class="bg-[#16A34A] text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-green-700 transition shadow-sm" data-i18n="btn_copy">Copier la liste</button>
+               <button onclick="closeRetardDetails()" class="bg-rose-100 text-rose-600 px-3 py-1.5 rounded text-xs font-bold hover:bg-rose-200 transition" data-i18n="btn_close">Fermer</button>
+           </div>
+       </div>
+       <div class="p-4 overflow-auto flex-1">
+           <table class="w-full text-left text-xs">
+               <thead class="bg-slate-100 sticky top-0 shadow-sm">
+                   <tr class="text-slate-500 font-bold uppercase text-[10px]">
+                       <th class="py-2 px-3" data-i18n="th_exp">N° Expédition</th>
+                       <th class="py-2 px-3" data-i18n="th_date">Date prévue</th>
+                       <th class="py-2 px-3" data-i18n="th_heure">Heure prévue</th>
+                       <th class="py-2 px-3 text-[#16A34A]" data-i18n="th_heure_arr">Heure d'arrivée</th>
+                       <th class="py-2 px-3" data-i18n="th_ref">Réf Camion</th>
+                       <th class="py-2 px-3 text-right" data-i18n="th_duree">Durée du retard</th>
+                   </tr>
+               </thead>
+               <tbody id="retardPopupBody" class="divide-y divide-slate-100">
+               </tbody>
+           </table>
+       </div>
+    </div>
+  </div>
+
+  <!-- HEADER DU DASHBOARD -->
+  <header class="bg-dark-blue rounded-lg px-4 py-2 mb-2 text-white flex items-center justify-between shadow-sm flex-shrink-0">
+    <div class="flex items-center space-x-3">
+      <img id="headerLogo" alt="Logo" class="hidden h-6 w-auto object-contain logo-white">
+      <span id="logoFallback" class="text-xl font-black italic tracking-wider text-white">DÉMO</span>
+      <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#16A34A] text-white uppercase tracking-wide" data-i18n="logistique">
+        Site démo
+      </span>
+    </div>
+    <div class="flex items-center space-x-4">
+      <button onclick="openTutorial()" class="bg-slate-100 text-[#1E293B] px-3 py-1 rounded-md font-bold text-[10px] uppercase hover:bg-white transition shadow-sm flex items-center gap-1 border border-slate-300" data-i18n="btn_tutorial">
+        💡 Tutoriel
+      </button>
+      <div class="flex items-center space-x-1.5 text-xs font-medium text-slate-200">
+        <span class="w-2 h-2 rounded-full bg-[#16A34A] animate-pulse"></span>
+        <span data-i18n="sync_prefix">Dernier contrôle traction :</span>
+        <span id="syncDateValue" class="font-bold tracking-wide">-</span>
+      </div>
+      <div class="flex items-center space-x-2 bg-[#0F172A] px-2 py-1 rounded-md border border-[#1D4ED8]">
+        <button onclick="setLang('fr')" class="lang-btn opacity-100 scale-110 transition text-xs font-bold text-white px-2" data-lang="fr">FR</button>
+        <button onclick="setLang('en')" class="lang-btn opacity-50 hover:opacity-100 transition text-xs font-bold text-white px-2" data-lang="en">EN</button>
+        <button onclick="setLang('es')" class="lang-btn opacity-50 hover:opacity-100 transition text-xs font-bold text-white px-2" data-lang="es">ES</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- FILTRES -->
+  <section class="card-box px-3 py-1.5 mb-2 flex flex-wrap items-center gap-4 text-xs flex-shrink-0">
+    <div class="flex items-center space-x-1.5">
+      <label class="text-[10px] font-bold text-slate-500 uppercase" data-i18n="lbl_cac">Expéditeur :</label>
+      <select id="filterCac" onchange="applyFilters()" class="text-xs border border-slate-300 rounded px-2.5 py-1 bg-white text-slate-800 font-semibold focus:outline-none focus:border-[#8BABFE]">
+        <option value="ALL" data-i18n="all_cac">Tous les expéditeurs</option>
+      </select>
+    </div>
+    <div class="flex items-center space-x-1.5">
+      <label class="text-[10px] font-bold text-slate-500 uppercase" data-i18n="lbl_sem">Semaines :</label>
+      <select id="filterSem" onchange="applyFilters()" class="text-xs border border-slate-300 rounded px-2.5 py-1 bg-white text-slate-800 font-semibold focus:outline-none focus:border-[#8BABFE]">
+        <option value="ALL" data-i18n="all_sem">Toutes les Semaines</option>
+      </select>
+    </div>
+    <div class="flex items-center space-x-1.5">
+      <label class="text-[10px] font-bold text-slate-500 uppercase" data-i18n="lbl_mois">Mois :</label>
+      <select id="filterMois" onchange="applyFilters()" class="text-xs border border-slate-300 rounded px-2.5 py-1 bg-white text-slate-800 font-semibold focus:outline-none focus:border-[#8BABFE]">
+        <option value="ALL" data-i18n="all_mois">Tous les Mois</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- SECTION HAUTE : KPIS -->
+  <section class="grid grid-cols-12 gap-2.5 mb-2 flex-shrink-0">
+    
+    <div class="col-span-12 lg:col-span-4 grid grid-cols-2 gap-2">
+      <div class="card-box p-2 flex flex-col justify-center items-center text-center border-b-2 border-b-[#8BABFE]">
+        <span class="text-[10px] font-bold text-slate-500 uppercase" data-i18n="kpi_camions">Camions</span>
+        <span id="kpiExp" class="text-xl font-black text-[#8BABFE] leading-tight">-</span>
+      </div>
+      <div class="card-box p-2 flex flex-col justify-center items-center text-center border-b-2 border-b-[#8BABFE]">
+        <span class="text-[10px] font-bold text-slate-500 uppercase" data-i18n="kpi_pal_b">Nb palettes - de B</span>
+        <span id="kpiPalB" class="text-xl font-black text-[#8BABFE] leading-tight">-</span>
+      </div>
+      <div class="card-box p-2 flex flex-col justify-center items-center text-center border-b-2 border-b-[#8BABFE]">
+        <span class="text-[10px] font-bold text-slate-500 uppercase" data-i18n="kpi_ecart_pal">Écart Palettes (logiciel - Réel)</span>
+        <span id="kpiEcartPalQty" class="text-xl font-black text-[#8BABFE] leading-tight">-</span>
+      </div>
+      <div class="card-box p-2 flex flex-col justify-center items-center text-center border-b-2 border-b-[#8BABFE]">
+        <span class="text-[10px] font-bold text-slate-500 uppercase" data-i18n="kpi_camion_ecart">Camion avec un écart palettes</span>
+        <span id="kpiCamionEcartPct" class="text-xl font-black text-[#8BABFE] leading-tight">-</span>
+      </div>
+    </div>
+
+    <div class="col-span-12 lg:col-span-4 card-box p-2 flex items-center gap-2.5 border-b-2 border-b-[#16A34A]">
+      <div class="w-1/3 flex flex-col justify-center space-y-1.5 text-center">
+        <div class="border border-slate-200 rounded p-1.5 bg-slate-50">
+          <span class="text-[9px] font-bold text-slate-500 uppercase block" data-i18n="kpi_retard">En retard</span>
+          <span id="kpiRetard" class="text-2xl font-black text-[#16A34A] leading-none">-</span>
+        </div>
+        <div class="border border-slate-200 rounded p-1 bg-white">
+          <span id="kpiRetardPct" class="text-xs font-black text-slate-700 leading-none">-</span>
+        </div>
+      </div>
+      <div class="w-2/3 h-24 relative">
+        <canvas id="chartTranches"></canvas>
+      </div>
+    </div>
+
+    <div class="col-span-12 lg:col-span-4 grid grid-cols-2 gap-2">
+      <div class="card-box p-2 flex flex-col justify-center items-center text-center border-b-2 border-b-[#8BABFE]">
+        <span class="text-[10px] font-bold text-slate-500 uppercase" data-i18n="kpi_controle">Camions contrôlés</span>
+        <span id="kpiControle" class="text-xl font-black text-[#8BABFE] leading-tight">-</span>
+      </div>
+      <div class="card-box p-2 flex flex-col justify-center items-center text-center border-b-2 border-b-[#6366F1]">
+        <span class="text-[10px] font-bold text-slate-500 uppercase" data-i18n="kpi_nok_slots">TRACTION NOK (Hors SLOTS)</span>
+        <div class="flex items-baseline justify-center space-x-1">
+          <span id="kpiSlotsNok" class="text-xl font-black text-[#6366F1] leading-tight">-</span>
+          <span id="kpiSlotsPct" class="text-xs font-bold text-slate-500 leading-tight">-</span>
+        </div>
+      </div>
+      <div class="card-box p-2 flex flex-col justify-center items-center text-center border-b-2 border-b-[#6366F1]">
+        <span class="text-[9px] font-bold text-slate-500 uppercase" data-i18n="kpi_nok_logiciel">TRACTION NOK (Contenu logiciel OK)</span>
+        <div class="flex items-baseline justify-center space-x-1">
+          <span id="kpiLogicielNok" class="text-xl font-black text-[#6366F1] leading-tight">-</span>
+          <span id="kpiLogicielPct" class="text-xs font-bold text-slate-500 leading-tight">-</span>
+        </div>
+      </div>
+      <div class="card-box p-2 flex flex-col justify-center items-center text-center border-b-2 border-b-[#6366F1]">
+        <span class="text-[9px] font-bold text-slate-500 uppercase" data-i18n="kpi_nok_reel">TRACTION NOK (Contenu Réel)</span>
+        <div class="flex items-baseline justify-center space-x-1">
+          <span id="kpiReelNok" class="text-xl font-black text-[#6366F1] leading-tight">-</span>
+          <span id="kpiReelPct" class="text-xs font-bold text-slate-500 leading-tight">-</span>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- SECTION BASSE -->
+  <section class="grid grid-cols-12 gap-2.5 flex-1 min-h-0 mb-1">
+    
+    <div class="col-span-12 lg:col-span-6 card-box p-3 flex flex-col h-full min-h-0">
+      <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 flex-shrink-0">
+        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+          <span>🚚</span> <span data-i18n="table_title">RETARDS TRANSPORTEURS</span>
+        </h3>
+        <span class="text-[10px] text-slate-400 font-medium" data-i18n="table_alert">Taux &gt; 15% en alerte</span>
+      </div>
+      <div class="overflow-y-auto flex-1 pr-1.5">
+        <table class="w-full text-left text-xs">
+          <thead class="sticky top-0 bg-white shadow-[0_1px_0_0_#e2e8f0] z-10">
+            <tr class="text-slate-400 font-bold uppercase text-[10px]">
+              <th class="py-1.5 px-2"><span data-i18n="th_transp">Transporteur</span></th>
+              <th class="py-1.5 px-2 text-center"><span data-i18n="th_courses">Camions</span></th>
+              <th class="py-1.5 px-2 text-center"><span data-i18n="th_retards">Retards</span></th>
+              <th class="py-1.5 px-2 text-right"><span data-i18n="th_taux">Taux</span></th>
+            </tr>
+          </thead>
+          <tbody id="tableTransporteurs" class="divide-y divide-slate-100 font-medium">
+            <!-- Rempli par JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="col-span-12 lg:col-span-6 card-box p-3 flex flex-col h-full min-h-0">
+      <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 flex-shrink-0">
+        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+          <span>📈</span> <span data-i18n="chart_title">ÉVOLUTION TEMPORELLE</span>
+        </h3>
+        
+        <div id="tabSelectorContainer" class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+          <button id="btnTabHebdo" onclick="switchChartTab('hebdo')" class="text-xs font-bold px-3 py-1 rounded-md bg-[#1D4ED8] text-white shadow-sm transition" data-i18n="btn_hebdo">
+            Hebdomadaire
+          </button>
+          <button id="btnTabMensuel" onclick="switchChartTab('mensuel')" class="text-xs font-bold px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 transition" data-i18n="btn_mensuel">
+            Mensuel
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 w-full relative min-h-0">
+        <canvas id="chartEvolution"></canvas>
+      </div>
+    </div>
+
+  </section>
+
+  <script>
+    Chart.register(ChartDataLabels);
+
+    // --- DICTIONNAIRE MULTILINGUE ---
+    const i18n = {
+      fr: {
+        logistique: "Site démo",
+        sync_prefix: "Dernier contrôle traction :",
+        lbl_cac: "Expéditeur :",
+        lbl_sem: "Semaines :",
+        lbl_mois: "Mois :",
+        all_cac: "Tous les expéditeurs",
+        all_sem: "Toutes les Semaines",
+        all_mois: "Tous les Mois",
+        kpi_camions: "Camions",
+        kpi_pal_b: "Nb palettes - de B",
+        kpi_ecart_pal: "Écart Palettes (logiciel - Réel)",
+        kpi_camion_ecart: "Camion avec un écart palettes",
+        kpi_retard: "En retard",
+        kpi_controle: "Camions contrôlés",
+        kpi_nok_slots: "TRACTION NOK (Hors SLOTS)",
+        kpi_nok_logiciel: "TRACTION NOK (Contenu logiciel OK)",
+        kpi_nok_reel: "TRACTION NOK (Contenu Réel)",
+        table_title: "RETARDS TRANSPORTEURS",
+        table_alert: "Taux > 15% en alerte",
+        th_transp: "Transporteur",
+        th_courses: "Camions",
+        th_retards: "Retards",
+        th_taux: "Taux",
+        chart_title: "ÉVOLUTION TEMPORELLE",
+        btn_hebdo: "Hebdomadaire",
+        btn_mensuel: "Mensuel",
+        chart_lbl_camions: "Nb de camions",
+        chart_lbl_retard: "Retard",
+        chart_lbl_slots: "TRACTION SLOTS NOK",
+        
+        btn_tutorial: "💡 Tutoriel",
+        btn_close: "Fermer",
+        tut_title: "Tutoriel : Explication des indicateurs",
+        tut_camions: "Nombre total de camions enregistrés sur la période sélectionnée.",
+        tut_pal_b: "Nombre total de palettes en état - de B.",
+        tut_ecart_pal: "Différence totale calculée entre les palettes annoncées (logiciel) et réelles.",
+        tut_camion_ecart: "Pourcentage de camions contrôlés présentant un écart sur le nombre de palettes.",
+        tut_retard: "Nombre et part des camions arrivés après l'horaire de réception prévu.",
+        tut_tranches_titre: "Tranches de retard",
+        tut_tranches_desc: "Répartition du volume de retards par durée (15-45, 45-90, +90 min).",
+        tut_controle: "Nombre de camions dont la traction a été controlée (sert de base pour %)",
+        tut_nok_slots: "Nombre et part de RDV pris hors créneaux.",
+        tut_nok_logiciel: "TRACTION NOK = 0 alors que LOGICIEL OK = 1. Erreur de saisie dans le logiciel de RDV menant à RDV hors créneaux.",
+        tut_nok_reel: "RDV pris hors créneaux (contenu réel, cas logiciel OK déduits).",
+        tut_table_desc: "Ici se trouve le classement des transporteurs selon leur volume de camions et leur taux de retard sur la période sélectionnée.",
+        tut_chart_desc: "Ici s'affiche l'évolution des volumes, des retards et des tractions NOK, par semaine ou par mois.",
+        tut_table_click: "NOUVEAU : Cliquez sur le nombre de retards (en vert) pour voir le détail des camions !",
+
+        popup_retard_title: "Détails des retards",
+        btn_copy: "Copier la liste",
+        th_exp: "N° Expédition",
+        th_date: "Date prévue",
+        th_heure: "Heure prévue",
+        th_heure_arr: "Heure d'arrivée",
+        th_ref: "Réf Camion",
+        th_duree: "Durée du retard",
+        alert_copy: "La liste a été copiée avec succès !"
+      },
+      en: {
+        logistique: "Demo site",
+        sync_prefix: "Last traction check:",
+        lbl_cac: "Shipper:",
+        lbl_sem: "Weeks:",
+        lbl_mois: "Months:",
+        all_cac: "All shippers",
+        all_sem: "All Weeks",
+        all_mois: "All Months",
+        kpi_camions: "Trucks",
+        kpi_pal_b: "Pallets < B",
+        kpi_ecart_pal: "Pallets Gap (logiciel - Real)",
+        kpi_camion_ecart: "Truck with pallets gap",
+        kpi_retard: "Delayed",
+        kpi_controle: "Controlled trucks",
+        kpi_nok_slots: "TRACTION NOK (Outside SLOTS)",
+        kpi_nok_logiciel: "TRACTION NOK (Software content OK)",
+        kpi_nok_reel: "TRACTION NOK (Real Content)",
+        table_title: "CARRIER DELAYS",
+        table_alert: "Rate > 15% on alert",
+        th_transp: "Carrier",
+        th_courses: "Trucks",
+        th_retards: "Delays",
+        th_taux: "Rate",
+        chart_title: "TIME EVOLUTION",
+        btn_hebdo: "Weekly",
+        btn_mensuel: "Monthly",
+        chart_lbl_camions: "Nb of trucks",
+        chart_lbl_retard: "Delay",
+        chart_lbl_slots: "TRACTION SLOTS NOK",
+
+        btn_tutorial: "💡 Tutorial",
+        btn_close: "Close",
+        tut_title: "Tutorial: Indicators Explanation",
+        tut_camions: "Total number of trucks registered over the selected period.",
+        tut_pal_b: "Total number of pallets in < B condition.",
+        tut_ecart_pal: "Total difference calculated between announced pallets (logiciel) and real ones.",
+        tut_camion_ecart: "Percentage of controlled trucks showing a gap in pallet count.",
+        tut_retard: "Number and share of trucks arriving after the scheduled reception time.",
+        tut_tranches_titre: "Delay brackets",
+        tut_tranches_desc: "Distribution of delay volume by duration (15-45, 45-90, +90 min).",
+        tut_controle: "Number of trucks whose traction was controlled (base for % calculations).",
+        tut_nok_slots: "Number and share of appointments made outside SLOTS.",
+        tut_nok_logiciel: "TRACTION NOK = 0 while SOFTWARE OK = 1. Booking software error leading to appointment outside SLOTS.",
+        tut_nok_reel: "Appointments outside SLOTS (real content, software OK cases deducted).",
+        tut_table_desc: "Here is the carrier ranking based on their truck volume and delay rate over the selected period.",
+        tut_chart_desc: "This shows the evolution of volumes, delays, and TRACTION NOK by week or month.",
+        tut_table_click: "NEW: Click on the number of delays (in green) to see the exact details per truck!",
+
+        popup_retard_title: "Delay details",
+        btn_copy: "Copy list",
+        th_exp: "Shipment N°",
+        th_date: "Planned date",
+        th_heure: "Planned time",
+        th_heure_arr: "Arrival time",
+        th_ref: "Truck Ref",
+        th_duree: "Delay duration",
+        alert_copy: "List copied successfully!"
+      },
+      es: {
+        logistique: "Sitio demo",
+        sync_prefix: "Último control tracción:",
+        lbl_cac: "Remitente:",
+        lbl_sem: "Semanas:",
+        lbl_mois: "Meses:",
+        all_cac: "Todos los remitentes",
+        all_sem: "Todas las Semanas",
+        all_mois: "Todos los Meses",
+        kpi_camions: "Camiones",
+        kpi_pal_b: "Palets < B",
+        kpi_ecart_pal: "Diferencia Palets (logiciel - Real)",
+        kpi_camion_ecart: "Camión con diferencia palets",
+        kpi_retard: "Con retraso",
+        kpi_controle: "Camiones controlados",
+        kpi_nok_slots: "TRACTION NOK (Fuera de SLOTS)",
+        kpi_nok_logiciel: "TRACTION NOK (Contenido software OK)",
+        kpi_nok_reel: "TRACTION NOK (Contenido Real)",
+        table_title: "RETRASOS DE TRANSPORTES",
+        table_alert: "Tasa > 15% en alerta",
+        th_transp: "Transportista",
+        th_courses: "Camiones",
+        th_retards: "Retrasos",
+        th_taux: "Tasa",
+        chart_title: "EVOLUCIÓN TEMPORAL",
+        btn_hebdo: "Semanal",
+        btn_mensuel: "Mensual",
+        chart_lbl_camions: "Nb de camiones",
+        chart_lbl_retard: "Retraso",
+        chart_lbl_slots: "TRACTION SLOTS NOK",
+
+        btn_tutorial: "💡 Tutorial",
+        btn_close: "Cerrar",
+        tut_title: "Tutorial: Explicación de Indicadores",
+        tut_camions: "Número total de camiones registrados en el período seleccionado.",
+        tut_pal_b: "Número total de palets en estado < B.",
+        tut_ecart_pal: "Diferencia total calculada entre los palets anunciados (logiciel) y los reales.",
+        tut_camion_ecart: "Porcentaje de camiones controlados que presentan una diferencia en la cantidad de palets.",
+        tut_retard: "Número y proporción de camiones que llegan después de la hora de recepción programada.",
+        tut_tranches_titre: "Tramos de retraso",
+        tut_tranches_desc: "Distribución del volumen de retrasos por duración (15-45, 45-90, +90 min).",
+        tut_controle: "Número de camiones cuya tracción fue controlada (base para %).",
+        tut_nok_slots: "Número y proporción de citas tomadas fuera de SLOTS.",
+        tut_nok_logiciel: "TRACTION NOK = 0 mientras SOFTWARE OK = 1. Error en el software de citas que lleva a cita fuera de SLOTS.",
+        tut_nok_reel: "Citas fuera de SLOTS (contenido real, casos software OK deducidos).",
+        tut_table_desc: "Aquí se encuentra la clasificación de transportistas según su volumen de camiones y tasa de retraso en el período.",
+        tut_chart_desc: "Aquí se muestra la evolución de los volúmenes, retrasos y TRACTION NOK por semana o mes.",
+        tut_table_click: "NUEVO: ¡Haga clic en el número de retrasos (en verde) para ver los detalles de los camiones!",
+
+        popup_retard_title: "Detalles de retrasos",
+        btn_copy: "Copiar lista",
+        th_exp: "N° Envío",
+        th_date: "Fecha prevista",
+        th_heure: "Hora prevista",
+        th_heure_arr: "Hora de llegada",
+        th_ref: "Ref Camión",
+        th_duree: "Duración retraso",
+        alert_copy: "¡Lista copiada con éxito!"
+      }
+    };
+
+    let rawData = [];
+    let currentFiltered = [];
+    let chartTranchesInst = null;
+    let chartEvolutionInst = null;
+    let activeTab = 'hebdo';
+    let currentLang = 'fr'; 
+    let maxGlobalDate = null;
+
+    window.onload = function() {
+      google.script.run
+        .withSuccessHandler(initDashboard)
+        .withFailureHandler(err => alert("Erreur chargement : " + err))
+        .getDashboardData();
+
+      google.script.run
+        .withSuccessHandler(setHeaderLogo)
+        .getLogoBase64();
+    };
+
+    function setHeaderLogo(base64Url) {
+      if (!base64Url) return;
+      const img = document.getElementById('headerLogo');
+      const fallback = document.getElementById('logoFallback');
+      img.src = base64Url;
+      img.classList.remove('hidden');
+      if (fallback) fallback.classList.add('hidden');
+    }
+
+    function openTutorial() {
+      document.getElementById('tutorialOverlay').classList.remove('hidden');
+    }
+    function closeTutorial() {
+      document.getElementById('tutorialOverlay').classList.add('hidden');
+    }
+
+    function chooseLangInit(lang) {
+      document.getElementById('langPopup').style.display = 'none';
+      setLang(lang);
+    }
+
+    function initDashboard(data) {
+      if (!data || data.length === 0) return;
+      rawData = data;
+
+      const timestamps = data.map(d => d.dateTimestamp).filter(ts => ts > 0);
+      if (timestamps.length > 0) {
+        maxGlobalDate = new Date(Math.max(...timestamps));
+      }
+
+      populateFilters();
+      setLang(currentLang); 
+      applyFilters(); 
+    }
+
+    function setLang(lang) {
+      currentLang = lang;
+      
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18n[lang][key]) el.innerText = i18n[lang][key];
+      });
+
+      const filterCac = document.getElementById('filterCac');
+      const filterSem = document.getElementById('filterSem');
+      const filterMois = document.getElementById('filterMois');
+      
+      if (filterCac && filterCac.options.length > 0) filterCac.options[0].text = i18n[lang].all_cac;
+      if (filterSem && filterSem.options.length > 0) filterSem.options[0].text = i18n[lang].all_sem;
+      if (filterMois && filterMois.options.length > 0) filterMois.options[0].text = i18n[lang].all_mois;
+
+      if (maxGlobalDate) {
+         const locale = lang === 'en' ? 'en-GB' : (lang === 'es' ? 'es-ES' : 'fr-FR');
+         document.getElementById('syncDateValue').innerText = maxGlobalDate.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' });
+      }
+
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.remove('opacity-100', 'scale-110');
+        btn.classList.add('opacity-50');
+        if(btn.getAttribute('data-lang') === lang) {
+            btn.classList.add('opacity-100', 'scale-110');
+            btn.classList.remove('opacity-50');
+        }
+      });
+
+      if (rawData.length > 0) {
+        renderChartEvolution();
+      }
+    }
+
+    function populateFilters() {
+      const cacs = [...new Set(rawData.map(d => d.cac))].filter(Boolean).sort();
+      const sems = [...new Set(rawData.map(d => d.semaine))].filter(Boolean).sort((a,b) => String(a).localeCompare(String(b), undefined, {numeric: true}));
+      
+      const moisList = [...new Set(rawData.map(d => d.mois))].filter(Boolean);
+      moisList.sort((a, b) => {
+        const itemA = rawData.find(d => d.mois === a);
+        const itemB = rawData.find(d => d.mois === b);
+        return (itemA?.dateTimestamp || 0) - (itemB?.dateTimestamp || 0);
+      });
+
+      const fill = (id, list) => {
+        const el = document.getElementById(id);
+        list.forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v; opt.innerText = v;
+          el.appendChild(opt);
+        });
+      };
+      fill('filterCac', cacs);
+      fill('filterSem', sems);
+      fill('filterMois', moisList);
+    }
+
+    function applyFilters() {
+      const cacVal = document.getElementById('filterCac').value;
+      const semVal = document.getElementById('filterSem').value;
+      const moisVal = document.getElementById('filterMois').value;
+
+      currentFiltered = rawData.filter(d => 
+        (cacVal === 'ALL' || d.cac === cacVal) &&
+        (semVal === 'ALL' || d.semaine === semVal) &&
+        (moisVal === 'ALL' || d.mois === moisVal)
+      );
+
+      updateKPIs(currentFiltered);
+      renderTableTransporteurs(currentFiltered);
+      renderChartTranches(currentFiltered);
+      renderChartEvolution();
+    }
+
+    function updateKPIs(data) {
+      const totalCamions = data.length;
+      const camionsControles = data.filter(d => d.hasDate).length;
+      const baseRatio = camionsControles || totalCamions || 1;
+
+      const sumAnn = data.reduce((acc, d) => acc + d.palAnn, 0);
+      const sumReel = data.reduce((acc, d) => acc + d.palReel, 0);
+      const ecartPalQty = sumAnn - sumReel;
+      const palB = data.reduce((acc, d) => acc + d.palB, 0);
+
+      const sumPalEcart = data.filter(d => d.palEcart).length;
+      const pctCamionEcart = ((sumPalEcart / baseRatio) * 100).toFixed(2) + ' %';
+
+      const totalRetards = data.filter(d => d.isRetard).length;
+      const pctRetard = ((totalRetards / baseRatio) * 100).toFixed(2) + ' %';
+
+      const slotsNok = data.filter(d => d.slotsNok).length;
+      const logicielNok = data.filter(d => d.logicielNok).length;
+      const reelNokBrut = data.filter(d => d.reelNok).length;
+      const reelNokNet = Math.max(0, reelNokBrut - logicielNok);
+
+      document.getElementById('kpiExp').innerText = totalCamions;
+      document.getElementById('kpiPalB').innerText = palB;
+      document.getElementById('kpiEcartPalQty').innerText = ecartPalQty.toLocaleString('fr-FR');
+      document.getElementById('kpiCamionEcartPct').innerText = pctCamionEcart;
+
+      document.getElementById('kpiRetard').innerText = totalRetards;
+      document.getElementById('kpiRetardPct').innerText = pctRetard;
+
+      document.getElementById('kpiControle').innerText = camionsControles;
+
+      document.getElementById('kpiSlotsNok').innerText = slotsNok;
+      document.getElementById('kpiSlotsPct').innerText = ((slotsNok / baseRatio) * 100).toFixed(2) + ' %';
+
+      document.getElementById('kpiLogicielNok').innerText = logicielNok;
+      document.getElementById('kpiLogicielPct').innerText = ((logicielNok / baseRatio) * 100).toFixed(2) + ' %';
+
+      document.getElementById('kpiReelNok').innerText = reelNokNet;
+      document.getElementById('kpiReelPct').innerText = ((reelNokNet / baseRatio) * 100).toFixed(2) + ' %';
+    }
+
+    function renderTableTransporteurs(data) {
+      const tbody = document.getElementById('tableTransporteurs');
+      tbody.innerHTML = '';
+
+      const listTransp = [...new Set(data.map(d => d.transporteur))].filter(Boolean);
+      const stats = listTransp.map(t => {
+        const rows = data.filter(d => d.transporteur === t);
+        const retards = rows.filter(d => d.isRetard).length;
+        const total = rows.length;
+        const pct = total ? (retards / total) * 100 : 0;
+        return { name: t, total: total, retards: retards, pct: pct };
+      });
+
+      stats.sort((a, b) => b.retards - a.retards || b.pct - a.pct);
+
+      stats.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/80 transition-colors";
+
+        const badgeColor = s.pct >= 15 
+          ? 'text-rose-600 bg-rose-50 border-rose-200' 
+          : 'text-emerald-700 bg-emerald-50 border-emerald-200';
+          
+        const retardCellClass = s.retards > 0 
+          ? 'text-[#16A34A] cursor-pointer hover:underline hover:scale-110 transition-transform block w-max mx-auto px-2 py-1 rounded hover:bg-[#16A34A] hover:text-white' 
+          : 'text-slate-400';
+
+        const retardOnClick = s.retards > 0 ? `onclick="showRetardsDetails('${s.name.replace(/'/g, "\\'")}')"` : '';
+
+        tr.innerHTML = `
+          <td class="py-2 px-2 font-semibold text-slate-800 truncate max-w-[200px]" title="${s.name}">${s.name}</td>
+          <td class="py-2 px-2 text-center font-bold text-slate-600">${s.total}</td>
+          <td class="py-2 px-2 text-center font-black">
+            <span class="${retardCellClass}" ${retardOnClick} title="Voir les détails">${s.retards}</span>
+          </td>
+          <td class="py-2 px-2 text-right">
+            <span class="inline-block px-2 py-0.5 rounded border text-[10px] font-bold ${badgeColor}">
+              ${s.pct.toFixed(1)} %
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function showRetardsDetails(transporteur) {
+       const retards = currentFiltered.filter(d => d.transporteur === transporteur && d.isRetard);
+       const tbody = document.getElementById('retardPopupBody');
+       tbody.innerHTML = '';
+       
+       document.getElementById('retardPopupTitle').innerText = i18n[currentLang].popup_retard_title + " : " + transporteur;
+       
+       retards.forEach(r => {
+           let duree = r.dureeExacteStr;
+           if (!duree) {
+               if (r.retard90) duree = '+90 min';
+               else if (r.retard45) duree = '45-90 min';
+               else if (r.retard15) duree = '15-45 min';
+           }
+
+           const tr = document.createElement('tr');
+           tr.className = "hover:bg-slate-50 transition-colors";
+           tr.innerHTML = `
+              <td class="py-2.5 px-3 font-bold text-slate-700">${r.expedition}</td>
+              <td class="py-2.5 px-3 font-medium text-slate-600">${r.dateStr}</td>
+              <td class="py-2.5 px-3 font-medium text-slate-600">${r.heureStr}</td>
+              <td class="py-2.5 px-3 font-medium text-[#16A34A]">${r.heureArriveeStr || '-'}</td>
+              <td class="py-2.5 px-3 font-medium text-slate-600">${r.refCamion}</td>
+              <td class="py-2.5 px-3 font-black text-rose-600 text-right">${duree}</td>
+           `;
+           tbody.appendChild(tr);
+       });
+       
+       document.getElementById('retardDetailsPopup').classList.remove('hidden');
+    }
+
+    function closeRetardDetails() {
+       document.getElementById('retardDetailsPopup').classList.add('hidden');
+    }
+
+    function copyRetards() {
+       const rows = document.querySelectorAll('#retardPopupBody tr');
+       let textToCopy = i18n[currentLang].th_exp + "\t" + i18n[currentLang].th_date + "\t" + i18n[currentLang].th_heure + "\t" + i18n[currentLang].th_heure_arr + "\t" + i18n[currentLang].th_ref + "\t" + i18n[currentLang].th_duree + "\n";
+       
+       rows.forEach(r => {
+           const cells = r.querySelectorAll('td');
+           const rowData = Array.from(cells).map(c => c.innerText.trim()).join('\t');
+           textToCopy += rowData + '\n';
+       });
+       
+       navigator.clipboard.writeText(textToCopy).then(() => {
+           alert(i18n[currentLang].alert_copy);
+       });
+    }
+
+    function renderChartTranches(data) {
+      const r15 = data.filter(d => d.retard15).length;
+      const r45 = data.filter(d => d.retard45).length;
+      const r90 = data.filter(d => d.retard90).length;
+
+      if (chartTranchesInst) chartTranchesInst.destroy();
+      chartTranchesInst = new Chart(document.getElementById('chartTranches'), {
+        type: 'bar',
+        data: {
+          labels: ['+ 90 min', '45-90 min', '15-45 min'],
+          datasets: [{
+            data: [r90, r45, r15],
+            backgroundColor: '#16A34A',
+            borderRadius: 4,
+            barThickness: 12
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              anchor: 'end',
+              align: 'right',
+              offset: 2,
+              color: '#475569',
+              font: { weight: 'bold', size: 10 },
+              formatter: (val) => val > 0 ? val : ''
+            }
+          },
+          scales: {
+            x: { display: false, grid: { display: false }, suggestedMax: Math.max(r90, r45, r15) + 6 },
+            y: { grid: { display: false }, ticks: { font: { weight: 'bold', size: 10 }, color: '#4A5568' } }
+          }
+        }
+      });
+    }
+
+    function switchChartTab(tab) {
+      activeTab = tab;
+      const btnHebdo = document.getElementById('btnTabHebdo');
+      const btnMensuel = document.getElementById('btnTabMensuel');
+
+      if (tab === 'hebdo') {
+        btnHebdo.className = "text-xs font-bold px-3 py-1 rounded-md bg-[#1D4ED8] text-white shadow-sm transition";
+        btnMensuel.className = "text-xs font-bold px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 transition";
+      } else {
+        btnMensuel.className = "text-xs font-bold px-3 py-1 rounded-md bg-[#1D4ED8] text-white shadow-sm transition";
+        btnHebdo.className = "text-xs font-bold px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 transition";
+      }
+      renderChartEvolution();
+    }
+
+    function renderChartEvolution() {
+      const semVal = document.getElementById('filterSem').value;
+      const modeActif = (semVal !== 'ALL') ? 'jour' : activeTab;
+
+      // Masquer les boutons Hebdo/Mensuel en vue journalière
+      const tabContainer = document.getElementById('tabSelectorContainer');
+      if (tabContainer) {
+        tabContainer.classList.toggle('hidden', modeActif === 'jour');
+      }
+
+      let labels = [];
+      let totalCamions = [];
+      let retards = [];
+      let slotsNok = [];
+
+      if (modeActif === 'jour') {
+        // 1. Tri chronologique strict sur la clé ISO "YYYY-MM-DD"
+        const sortedDays = [...new Set(currentFiltered.map(d => d.jour))]
+          .filter(Boolean)
+          .sort();
+
+        const locale = currentLang === 'en' ? 'en-GB' : (currentLang === 'es' ? 'es-ES' : 'fr-FR');
+
+        // 2. Conversion des clés "YYYY-MM-DD" en nom du jour (ex: "Lundi")
+        labels = sortedDays.map(isoDate => {
+          const [y, m, d] = isoDate.split('-').map(Number);
+          const dateObj = new Date(y, m - 1, d);
+          const dayName = dateObj.toLocaleDateString(locale, { weekday: 'long' });
+          return dayName.charAt(0).toUpperCase() + dayName.slice(1);
+        });
+
+        // 3. Agrégation avec sécurité anti-données incomplètes (renvoie null au lieu de 0)
+        sortedDays.forEach(isoDate => {
+          const rows = currentFiltered.filter(d => d.jour === isoDate);
+          const controles = rows.filter(d => d.hasDate).length;
+
+          totalCamions.push(rows.length > 0 ? rows.length : null);
+
+          if (controles === 0) {
+            retards.push(null);
+            slotsNok.push(null);
+          } else {
+            retards.push(rows.filter(d => d.isRetard).length);
+            slotsNok.push(rows.filter(d => d.slotsNok).length);
+          }
+        });
+
+      } else if (modeActif === 'hebdo') {
+        labels = [...new Set(currentFiltered.map(d => d.semaine))].sort((a,b) => String(a).localeCompare(String(b), undefined, {numeric: true}));
+        labels.forEach(s => {
+          const rows = currentFiltered.filter(d => d.semaine === s);
+          const controles = rows.filter(d => d.hasDate).length;
+          totalCamions.push(rows.length > 0 ? rows.length : null);
+          retards.push(controles === 0 ? null : rows.filter(d => d.isRetard).length);
+          slotsNok.push(controles === 0 ? null : rows.filter(d => d.slotsNok).length);
+        });
+
+      } else {
+        labels = [...new Set(currentFiltered.map(d => d.mois))].filter(Boolean);
+        labels.sort((a, b) => {
+          const itemA = currentFiltered.find(d => d.mois === a);
+          const itemB = currentFiltered.find(d => d.mois === b);
+          return (itemA?.dateTimestamp || 0) - (itemB?.dateTimestamp || 0);
+        });
+        labels.forEach(m => {
+          const rows = currentFiltered.filter(d => d.mois === m);
+          const controles = rows.filter(d => d.hasDate).length;
+          totalCamions.push(rows.length > 0 ? rows.length : null);
+          retards.push(controles === 0 ? null : rows.filter(d => d.isRetard).length);
+          slotsNok.push(controles === 0 ? null : rows.filter(d => d.slotsNok).length);
+        });
+      }
+
+      if (chartEvolutionInst) chartEvolutionInst.destroy();
+      chartEvolutionInst = new Chart(document.getElementById('chartEvolution'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            { 
+              type: 'bar',
+              label: i18n[currentLang].chart_lbl_camions, 
+              data: totalCamions, 
+              backgroundColor: 'rgba(139, 171, 254, 0.45)',
+              borderColor: '#8BABFE',
+              borderWidth: 1,
+              borderRadius: 4,
+              maxBarThickness: 40,
+              order: 2,
+              yAxisID: 'y1' 
+            },
+            { 
+              label: i18n[currentLang].chart_lbl_retard, 
+              data: retards, 
+              borderColor: '#16A34A',
+              backgroundColor: '#16A34A', 
+              borderWidth: 2.5, 
+              pointRadius: 4, 
+              pointHoverRadius: 6,
+              tension: 0.25, 
+              spanGaps: false,
+              order: 1,
+              yAxisID: 'y' 
+            },
+            { 
+              label: i18n[currentLang].chart_lbl_slots, 
+              data: slotsNok, 
+              borderColor: '#6366F1',
+              backgroundColor: '#6366F1', 
+              borderWidth: 2.5, 
+              pointRadius: 4, 
+              pointHoverRadius: 6,
+              tension: 0.25,
+              spanGaps: false, 
+              order: 1,
+              yAxisID: 'y' 
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: {
+            padding: { top: 4, bottom: 4, left: 4, right: 4 }
+          },
+          plugins: {
+            datalabels: { display: false },
+            legend: { 
+              position: 'top', 
+              align: 'center',
+              labels: { 
+                usePointStyle: true, 
+                pointStyle: 'circle',
+                boxWidth: 8,
+                boxHeight: 8,
+                padding: 28,
+                color: '#475569',
+                font: { size: 12, weight: '600' },
+                generateLabels: function(chart) {
+                  const original = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                  original.forEach(label => { label.text = '  ' + label.text; });
+                  return original;
+                }
+              } 
+            }
+          },
+          scales: {
+            y: { 
+              position: 'left', 
+              beginAtZero: true, 
+              grid: { color: '#F1F5F9' }, 
+              ticks: { color: '#64748B', font: { size: 10 } } 
+            },
+            y1: { 
+              position: 'right', 
+              beginAtZero: true, 
+              grid: { display: false }, 
+              ticks: { color: '#8BABFE', font: { size: 10, weight: 'bold' } } 
+            },
+            x: { 
+              grid: { display: false }, 
+              ticks: { color: '#64748B', font: { size: 10, weight: 'bold' } } 
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
