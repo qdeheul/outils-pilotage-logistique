@@ -41,7 +41,7 @@ Data volumes (historique)  +  Extractions du logiciel RDV (1 fichier / semaine, 
 
 ## Dashboard
 
-Lien dans le fichier principal
+Lien dans le README principal
 
 ## Fichiers
 
