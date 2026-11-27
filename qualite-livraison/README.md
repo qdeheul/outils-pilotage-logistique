@@ -42,7 +42,7 @@ Extract_récep_20 (1 / semaine)      ──────►    Récep Décanting 
 
 ## Dashboard
 
-Lien dans le fichier principal
+Lien dans le README principal
 
 ## Fichiers
 
